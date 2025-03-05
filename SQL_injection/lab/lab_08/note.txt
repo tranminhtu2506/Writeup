@@ -1,0 +1,11 @@
+SQL injection - SQL injection UNION attack, finding a column containing text
+
+End Goal:  perform a SQL injection UNION attack that returns an additional row containing the value provided. 
+
+Analysis
+--------
+Bước 1: thêm dấu ' để xem phản hồi 
+Bước 2: thêm dấu -- để xem có comment được không và xem phản hồi --> có phản hồi bình thường
+Bước 3: Sử dụng ORDER BY 1-- để xác định số lượng cột trả về --> 3 cột
+Bước 4: Sử dụng ' UNION SELECT NULL,NULL,NULL-- rồi thay lần lượt NULL thành 'a' để xem cột nào trả về kiểu chuỗi
+Bước 5: thay giá trị được cung cấp vào vị trí có cột chứa dữ liệu trả về là chuỗi 

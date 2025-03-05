@@ -1,0 +1,16 @@
+SQL injection - SQL injection attack, querying the database type and version on MySQL and Microsoft
+
+End Goal:  display the database version string.
+
+Analysis
+--------
+Bước 1: thêm ' vào đuôi url để xem phản hồi của máy chủ 
+--> có phản hồi --> có thể can thiệp vào SQL
+Bước 2: thử thêm -- vào sau ' --> không có gì khác biệt 
+thử thêm # vào sau vì cả 2 cái đều không thể comment --> copy url vào burpsuit, chặn yêu cầu rồi gửi lại yêu cầu
+tơi repeater, thêm các kí tự r sử dụng ctrl+u để mã hóa lại kí tự 
+--> sử dụng dấu -- vẫn không có kết quả nhưng # được mã hóa lại thành %23 --> có trả lại phản hồi thành công 
+Bước 3: Sử dụng thêm order by 1# r tăng dần để xác định số lượng cột 
+--> sau khi kiểm tra có 2 cột 
+Bước 4: Sử dụng tấn công UNION SELECT 'a','b'# để kiểm tra kiểu dữ liệu trả về
+Bước 5: sử dụng ' UNION SELECT NULL,@@version# --> trả về thông tin của phiên bản CSDL 

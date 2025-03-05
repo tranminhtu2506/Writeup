@@ -1,0 +1,39 @@
+SQL injection - SQL injection attack, listing the database contents on Oracle
+
+End Goal:  log in as the administrator user.
+
+Analysis
+--------
+Bước 1: Truy cập trang chủ vào home rồi chặn yêu cầu, sau đó gửi yêu cầu tới repeater
+
+Bước 2: Sửa đồi ở phần trackingId bằng cách thêm dấu ' vào sau --> nhận được thông báo lỗi 
+
+Bước 3: Đổi thành '' --> lúc này không bị lỗi nữa --> vừa rồi bị lỗi syntax khi ' không được đóng --> ảnh hưởng tới phản hồi
+
+Bước 4: Giờ cần xác minh lỗi cú pháp vừa rồi là của SQL chứ k phải lỗi nào khác --> trước hết cần xây dựng 1 truy vấn hợp lệ: TrackingId=...'||(SELECT '')||', truy vấn vẫn trả về không hợp lệ --> thử thêm FROM dual vào --> ko có lỗi --> sử dụng Oracle
+
+Bước 5: Thử tạo truy vấn không hợp lệ bằng việc thay tên bảng bằng 1 bảng không tồn tại --> bị lỗi. Hành vi này cho thấy rõ ràng rằng lệnh inject của bạn đang được xử lý như một truy vấn SQL bởi back-end.
+
+Bước 6: Có thể kiểm tra xem bảng users có tồn tại không bằng: 
+'||(SELECT '' FROM users WHERE ROWNUM = 1)||' HOẶC '||(SELECT NULL FROM users WHERE ROWNUM = 1)||' , việc này có nghĩa là sẽ chọn một chuỗi rỗng ('') từ bảng users và chỉ lấy một hàng duy nhất (do điều kiện WHERE ROWNUM = 1). Tại sao lại có thể chọn được 1 chuỗi rỗng hay NULL từ 1 dòng của 1 bảng? Vì việc chọn một chuỗi rỗng vẫn là một phép toán hợp lệ và trả về một hàng với một cột có giá trị là chuỗi rỗng. Vậy tại sao lại chỉ có thể chọn 1 hàng mà không phải tất cả? vì việc cố gắng trả về một chuỗi rỗng cho từng hàng sẽ tiêu tốn rất nhiều tài nguyên và có thể gây ra lỗi "out of memory" hoặc "ORA-00604: error occurred at recursive SQL level 1", vì vậy dù câu truy vấn có đúng thì vẫn sẽ bị lỗi --> vẫn hiển thị lỗi --> không xét được. 
+Sau khi kiểm tra thấy có tồn tại bảng users 
+
+Bước 7: Sử dụng những truy vấn có điều kiện để kiểm tra xem có thông báo lỗi với những truy vấn tạo ra lỗi hay không, ví dụ: '||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+Câu truy vấn này sẽ cố gắng chuyển 1/0 thành kiểu char nếu 1=1(luôn đúng) --> vì vậy sẽ luôn có lỗi --> sẽ hiển thị ra lỗi, để kiểm tra xem nếu đổi điều kiện thì có lỗi không, ta thay 1=2 vào --> không còn hiển thị lỗi nữa vì lúc này chọn '' 
+Câu lệnh CASE kiểm tra một điều kiện và đánh giá thành một biểu thức nếu điều kiện là đúng và một biểu thức khác nếu điều kiện là sai. Biểu thức trước chứa phép chia cho số không, gây ra lỗi. Trong trường hợp này, hai tải trọng kiểm tra các điều kiện 1=1và 1=2, và lỗi được nhận khi điều kiện là true.
+
+Bước 8: có thể sử dụng hành vi này để kiểm tra xem các mục cụ thể có tồn tại trong bảng hay không. Ví dụ, sử dụng truy vấn sau để kiểm tra xem tên người dùng administrator có tồn tại hay không: 
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+truy vấn trên cố gắng chuyển 1/0 thành 1 kí tự từ bảng users nếu username = administrator --> nếu có hiển thị lỗi --> có thể là do lỗi chuyển đổi hoặc lỗi vì không có người dùng, vì vậy đặt thành 1=2, nếu lúc này không còn lỗi --> có người dùng admin --> có người dùng administrator
+
+Bước 9: Tiếp theo là xác định có bao nhiêu ký tự trong mật khẩu của administratorngười dùng. Để thực hiện việc này, hãy thay đổi giá trị thành: 
+'||(SELECT CASE WHEN LENGTH(password)>1 THEN to_char(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+điều này kiểm tra nếu độ dài của password của người dùng administrator lớn hơn 1 thì sẽ trả về lỗi, điều kiện này là chắc chắn đúng nên chắc chắn có lỗi trả về 
+
+Bước 10: Gửi request tới intruder rồi add vào phần độ dài của password, nếu như mã trả về là 200 thì tức là bằng giá trị đó
+vì status code bắt đầu là 200 từ số 20 --> từ lúc LENGTH(password)>20 bắt đầu bị sai --> độ dài password = 20
+
+Bước 11: Sau khi đủ dữ kiện, giờ ta sẽ brute forcer từng phần của password , vì csdl là Oracle nên sử dụng SUBSTR để trích xuất: 
+'||(SELECT CASE WHEN SUBSTR(password)='a' THEN to_char(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+gửi đến intruer và add ở phần ='a' sau đó chọn brute forcer, nếu status code khác 200 --> là kí tự đóng
+được mật khẩu là : moy4a7ssnexiv8vxitdt

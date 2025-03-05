@@ -1,0 +1,9 @@
+SQL injection - SQL injection UNION attack, determining the number of columns returned by the query
+End Goal:  determine the number of columns returned by the query by performing a SQL injection UNION attack that returns an additional row containing null values.
+
+Analysis
+--------
+Bước 1: thêm dấu ' và xem phản hồi 
+Bước 2: thêm dấu -- để xem có comment được không
+Bước 3: sử dụng order by để xác định số lượng cột trả về --> 3
+Bước 4: sử dụng ' UNION SELECT NULL,NULL,NULL--

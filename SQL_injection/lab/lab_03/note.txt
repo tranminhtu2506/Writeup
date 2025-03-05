@@ -1,0 +1,24 @@
+SQL injection - SQL injection attack, querying the database type and version on Oracle
+
+End Goal:  display the database version string.
+
+Analysis
+--------
+Bước 1: thử thêm kí tự ' vào sau để xem phản hồi --> trả về phản hồi lỗi --> có thể can thiệp vào truy vấn 
+Bước 2: kết hợp ' cùng -- để kết thúc sớm truy vấn và comment phần còn lại của truy vấn
+kết quả hiển thị trả về kết quả cho: Clothing, shoes and accessories'--
+vì kết quả trả về là các bài viết có tiêu đề và nội dung 
+--> có thể hình dung truy vấn như sau: SELECT title, conent FROM posts WHERE name='' and điều kiện 2
+Bước 3: vì yêu cầu là xem phiên bản của Oracle, mà thông tin có thể được lưu trong 1 trong 2 bảng sau: v$version
+hoặc v$instance --> cần sử dụng union select để tấn công để xem được thông tin từ bảng khác
+muốn sử dụng union cần thỏa mãn 2 điều kiện:
+ +) Các truy vấn trả về phải có cùng số cột --> phải biết chính xác số cột của truy vấn hiện tại 
+ +) Các kiểu dữ liệu phải tương thích --> phải tìm cột có kiểu trả về là VARCHAR hoặc NVARCHAR để in ra kết quả
+--> Có 2 cách xác định số lượng cột trả về:
+    Cách 1: sử dụng chèn mệnh đề ORDER BY 
+    Cách 2: sử dụng UNION SELECT NULL (với Oracle thì sử dụng thêm from dual)
+Sau khi thử ta thấy có 2 cột được trả về, lúc này sử dụng tấn công dạng union select 'a',NULL FROM dual-- để tìm
+xem cột nào có kiểu dữ liệu trả về là chuỗi
+--> Sau khi thử thấy cả 2 cột trả về đều dạng chuỗi --> sử dụng 1 cột là BANNER, 1 cột là NULL FROM v$version
+--> Sẽ trả về thông tin của phiên bản ở cuối trang 
+

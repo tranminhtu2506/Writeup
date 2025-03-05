@@ -1,0 +1,10 @@
+SQL injection - Blind SQL injection with time delays
+
+End Goal: To solve the lab, exploit the SQL injection vulnerability to cause a 10 second delay.
+
+Analysis
+--------
+Bước 1: thử thêm ' vào sau link --> không có kết quả trả về --> Blind
+Bước 2: thử thêm ' vào sau tracking nhưng k có gì trả về --> loại bỏ phản hồi có điều kiện và lỗi có điều kiện và lỗi chi tiết
+Bước 3: giờ còn khả năng làm chậm phản hồi bằng timedelay nhưng hiện tại chưa biết csdl đang sử dụng thuộc kiểu nào --> cần thử từng trường hợp dưới dạng:
+' || (SELECT pg_sleep(10)) -- đặt vào trong ngoặc cú pháp làm delay của từng CSDL --> sẽ có 1 cái làm chậm 10s --> 

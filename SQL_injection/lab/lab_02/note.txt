@@ -1,0 +1,16 @@
+SQL injection - Login functionality 
+
+End Goal: perform SQLi attack and log in as the administrator user.
+
+Analysis
+--------
+Bước 1: thử tài khoản và mật khẩu phổ biến để xem thông báo của máy chủ 
+Ở đây hiển thị lỗi báo chung chung --> không xem xét được tên tài khoản hoặc mật khẩu có tồn tại hay không
+Bước 2: 
+Thử đặt ' vào trường username và nhập bừa mật khẩu xem phản hồi của máy chủ thế nào (việc này nhằm thử làm hỏng
+cấu trúc của truy vấn xem có phản hồi gì không)
+--> có lỗi phản hồi --> có thể can thiệp vào truy vấn 
+--> có thể suy ra truy vấn: SELECT cột FROM users WHERE username = 'admin' and password = 'admin'
+can thiệp bước đầu: SELECT cột FROM users WHERE username = ''' and password = 'admin' --> lỗi syntax
+Bước 3: Đặt tên administrator kết hợp cùng ' và -- để đóng sớm truy vấn và comment phần sau của truy vấn 
+

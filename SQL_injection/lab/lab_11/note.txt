@@ -1,0 +1,21 @@
+SQL injection - Blind SQL injection with conditional responses
+
+End Goal: The database contains a different table called users, with columns called username and password. You need to exploit the blind SQL injection vulnerability to find out the password of the administrator user.
+
+Analysis
+--------
+Bước 1: Truy cập vào Home --> thấy có sự khác biệt vì hiển thị welcomeback
+Bước 2: thử các bước cơ bản như ' hay -- có kết quả khác biệt trả về nhưng không hiển thị thông tin gì, thậm chí khi thêm những điều kiện sai như 1=0, .... --> blind sql 
+Bước 3: f12 vào application xem phần trackingId, thử xóa đi r f5 lại trang --> không còn thấy welcomeback --> phần này có ảnh hưởng tới kết quả trả về --> cần can thiệp vào phần này
+--> suy đoán sql truy vấn phần này có dạng: SELECT trackingId FROM trackedUsers WHERE trackingId = '...'
+Bước 4: thử thêm ' AND '1'='2 --> đây là 1 điều kiện sai, lúc này truy vấn trở thành: 
+SELECT trackingId FROM trackedUsers WHERE trackingId = '...' AND '1'='2'--> không còn trả về welcomeback --> có thể can thiệp vào truy vấn từ điểm này 
+Bước 5: sử dụng ' AND (SELECT 'a' FROM users LIMIT 1)='a --> để kiểm tra xem có tồn tại bảng users không --> có tồn tại bảng users
+Bước 6: sử dụng ' AND (SELECT 'a' FROM users WHERE username='administrator')='a --> kiểm tra xem có tồn tại người dùng administrator
+Bước 7: sử dụng ' AND (SELECT 'a' FROM users WHERE username='administrator' and LENGTH(password)>1)='a --> kiểm tra độ dài mật khẩu của administrator --> tăng dần độ dài đến khi không còn trả về welcomeback --> độ dài của data trả về nhỏ hơn bình thường 
+Gửi request tới intruder, sử dụng Add dấu vào phần >1, sau đó qua phần payload, chọn Payload type là Numbers rồi cho phạm vi tăng từ 1 đến 50 với bước nhảy là 1 --> tới khi nào có độ dài trả về nhỏ hơn bình thường --> độ dài mật khẩu bằng số đó +1
+Bước 8: sử dụng ' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a --> kiểm tra kí tự đầu tiên của password của administrator có phải a không, sử dụng add ở phần ='a , sang phần Payload, chọn Payload type = brute forcer --> vì mật khẩu chỉ gồm các chữ cái thường và số nên phần character set điền các kí tự từ a->z và 0->9 --> bắt đầu tấn công, vì nếu đúng thì trả về welcomback nên chọn phản hồi nào có kích thước trả về lớn hơn bình thường --> sau đó thay đổi lần lượt giá trị tăng thêm 1 ở phần (password,(1),1) sau khi lấy được từng kí tự
+Bước 9: sau khi chạy 20 lần --> được mật khẩu là 8hni2zt6lbe1t1sg4t5o 
+
+
+có thể vào phần setting, ở grep - match có thể clear danh sách và add thông điệp muốn kiểm tra ở mỗi kết quả trả về 
