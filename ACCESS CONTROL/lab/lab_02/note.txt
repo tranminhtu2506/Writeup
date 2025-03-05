@@ -1,0 +1,20 @@
+BROKEN ACCESS CONTROL: Unprotected admin functionality with unpredictable URL
+
+DESCRIBE: This lab has an unprotected admin panel. It's located at an unpredictable location, but the location is disclosed somewhere in the application. Solve the lab by accessing the admin panel, and using it to delete the user carlos.
+
+ANALYSTIC
+---------
+Thực hiện truy cập vào bài lab, thử truy cập vào những URL có chứa end points: /admin, /administrators, /robots.txt, /sitemap.xml nhưng không có kết quả. Nhìn lại tiêu đề của lab, ta thấy có lỗ hổng ở admin panel, nó được định vị bởi 1 vị trí không thể đoán được --> kể cả có tấn công brute-force thì cũng không đoán được; nhưng địa chỉ của nó được đật đâu đó trong ứng dụng --> chọn view page source để kiểm tra ta thấy có 1 đoạn script:
+var isAdmin = false;
+if (isAdmin) {
+   var topLinksTag = document.getElementsByClassName("top-links")[0];
+   var adminPanelTag = document.createElement('a');
+   adminPanelTag.setAttribute('href', '/admin-egqnk6');
+   adminPanelTag.innerText = 'Admin panel';
+   topLinksTag.append(adminPanelTag);
+   var pTag = document.createElement('p');
+   pTag.innerText = '|';
+   topLinksTag.appendChild(pTag);
+}
+
+ở đây thực hiện kiểm tra xem user có phải admin không, nếu có sẽ tạo 1 đường dẫn tới admin panel trong trang chủ, tuy nhiên nó có lỗ hổng vì để lộ đường dẫn tới trang admin, nếu không được bảo vệ, ta có thể thực hiện truy cập đường dẫn và xóa người dùng carlos. 

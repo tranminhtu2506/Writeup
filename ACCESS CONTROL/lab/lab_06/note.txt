@@ -1,0 +1,8 @@
+BROKEN ACCESS CONTROL: Method-based access control can be circumvented
+
+DESCRIBE: This lab implements access controls based partly on the HTTP method of requests. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin. To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+
+ANALYSTIC
+---------
+Thực hiện đăng nhập vào bài lab với tài khoản của quản trị viên đã cho trước, thử Upgrade tài khoản của mình lên admin rồi logout khỏi tài khoản admin. Thực hiện đăng nhập vào tài khoản của wiener. Quan sát trong history, thấy khi muốn thay đổi role của 1 user, sẽ gửi 1 POST request có tham số: username=wiener&action=downgrade
+Phần action có thể nhận 2 giá trị là downgrade và Upgrade. Ta thử gửi lại request này tới repeater và thay đổi giá trị thành upgrade --> ta thấy bị từ chối. Tuy nhiên, theo đề bài, phòng lab này có lỗ hổng ở method HTTP và mục tiêu của ta là nâng cấp bản thân lên thành admin khi đăng nhập với user thường, vì vậy ta cần target vào chức năng nâng cấp hay down user. Ta thử thay đổi phương thức của request thành PUT và đổi giá trị của action thành upgrade --> ta thành công thay đổi được role của mình. Cách khác là ta có thể sử dụng method GET, thêm tham số ?username=wiener&action=upgrade và thực hiện gửi đi, ta cũng có được kết quả tương tự. 

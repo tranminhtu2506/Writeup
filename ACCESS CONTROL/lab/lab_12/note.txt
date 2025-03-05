@@ -1,0 +1,24 @@
+BROKEN ACCESS CONTROL: Multi-step process with no access control on one step
+
+DESCRIBE: This lab has an admin panel with a flawed multi-step process for changing a user's role. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+
+ANALYSTIC
+---------
+Đầu tiên ta thực hiện đăng nhập vào lab với tài khoản admin, truy cập tới đường dẫn admin panel và thực hiện upgrade user carlos lên admin. Quan sát quá trình upgrade ta thấy có những bước sau:
+1. Tải giao diện của trang /admin (tức admin panel)
+2. Sau khi chọn 1 user để upgrade hoặc downgrade, sẽ gửi POST request tới 1 trang có endpoint: POST /admin-roles
+với body:
+username=carlos&action=upgrade
+3. Sau khi gửi xong bước 2, ta tiếp tục thực hiện gửi 1 POST request tới endpoint:POST /admin-roles với body:
+action=upgrade&confirmed=true&username=carlos
+
+Sau khi hoàn thành 3 upgrade cho carlos, ta thực hiện đăng xuất khỏi admin và đăng nhập vào tài khoản wiener. Đọc đề bài ta thấy lab có bảng quản trị với quy trình nhiều bước bị lỗi để thay đổi vai trò của người dùng, cụ thể ở đây là 3 bước đã nêu bên trên. Ta chưa biết lỗ hổng nằm ở bước nào, nên sẽ thực hiện tấn công từng bước của quy trình. 
+Trước hết ta thử gửi 1 request tới /admin từ account wiener, ta thấy ta bị từ chối truy cập trong backend. Tiếp đến ta thử truy cập vào trang /admin-roles với thay đổi giá trị tham số username thành wiener bằng cả phương thức POST và GET nhưng cũng bị từ chối bởi front-end. Tuy nhiên khi ta thử gửi lại request ở bước 3 với giá trị username là wiener, ta nhận được 1 response như sau:
+
+HTTP/2 302 Found
+Location: /admin
+X-Frame-Options: SAMEORIGIN
+Content-Length: 0
+
+Ta không thấy có dấu hiệu của thong báo từ chối mà được chuyển hướng tới trang admin --> lỗ hổng đã xảy ra ở bước này vì bỏ qua xác định người gửi request --> ta thành công đổi role của tài khoản và hoàn thành lab. 

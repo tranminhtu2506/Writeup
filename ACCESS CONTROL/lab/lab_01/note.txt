@@ -1,0 +1,10 @@
+BROKEN ACCESS CONTROL: Unprotected admin functionality
+
+DESCRIBE: This lab has an unprotected admin panel. Solve the lab by deleting the user carlos.
+
+ANALYSTIC
+---------
+Thực hiện truy cập vào lab, như đề bài đã nói thì giao diện admin không được bảo vệ, ta thử thực hiện truy cập tới những đường dẫn như: /admin hay /administrators nhưng không có kết quả gì. Tiếp đó thử tìm những URL có chứa những end points như: /robots hay /sitemap.xml --> ta thấy khi tra về /robots.txt được kết quả:
+User-agent: *
+Disallow: /administrator-panel
+--> có đường dẫn tới giao diện của admin --> thực hiện truy cập và xóa tài khoản carlos.

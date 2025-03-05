@@ -1,0 +1,18 @@
+BROKEN ACCESS CONTROL: Referer-based access control
+
+DESCRIBE: This lab controls access to certain admin functionality based on the Referer header. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+
+ANALYSTIC
+---------
+Thực hiện đăng nhập vào bài lab bằng tài khoản admin cho trước, sau đó truy cập vào đường dẫn tới admin panel, thực hiện upgrade user carlos, quan sát quy trình của nó rồi thực hiện đăng xuất khỏi tài khoản admin. Quan sát trong history ta có thể thấy chức năng này gồm những quá trình sau:
+1. Truy cập vào endpoint: /admin chứa danh sách các tài khoản hiện có với Referer: https://0a3a005703af416080c3ad82003b0064.web-security-academy.net/my-account?id=administrator
+2. Sau khi chọn được tài khoản được thay đổi, thực hiện 1 GET request tới: /admin-roles?username=carlos&action=upgrade để thay đổi role của user với Referer: Referer: https://0a3a005703af416080c3ad82003b0064.web-security-academy.net/admin
+
+Ta thấy mục tiêu là thay đổi role của mình, ta target vào bước thứ 2 của chức năng, ta thấy nó phải được Referer từ trang /admin để đảm bảo, tuy nhiên khi thử gửi request này tới repeater và thực hiện thay đổi giá trị bằng wiener, sửa đồi trường Referer này đến từ /admin, ta nhận được response:
+HTTP/2 302 Found
+Location: /admin
+X-Frame-Options: SAMEORIGIN
+Content-Length: 0
+
+tương tự với response khi ta upgrade role của 1 user trong tài khoản admin --> ta đã thành công upgrade role của wiener --> hoàn thành lab.

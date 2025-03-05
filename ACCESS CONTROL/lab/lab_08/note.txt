@@ -1,0 +1,9 @@
+BROKEN ACCESS CONTROL: User ID controlled by request parameter, with unpredictable user IDs
+
+DESCRIBE: This lab has a horizontal privilege escalation vulnerability on the user account page, but identifies users with GUIDs.
+To solve the lab, find the GUID for carlos, then submit his API key as the solution.
+You can log in to your own account using the following credentials: wiener:peter
+
+ANALYSTIC
+---------
+Thực hiện đăng nhập vào bài lab bằng tài khoản được cho trước. Ta thấy phần tham số user-id là 1 chuỗi kí tự dài và gần như không thể dự đoán trước --> ta không thể mò user-id để có thể truy cập vào tài khoản carlos được. Tuy nhiên trang còn chức năng liên quan đến xem các bài post --> ta thực hiện thử view 1 bài post và kiểm tra phần bình luận, ta không thấy có tiết lộ thông tin gì của người comment. Tuy nhiên ở bên trên, tên tác giả của bài post được hiển thị sang màu tím và có lẽ được liên kết với 1 trang nào đó, ta thử mở trang liên kết lên và nhận được 1 trang có URL như sau: /blogs?userId=a4426f97-b7e1-4929-83b2-7db3260bd307 --> ta thấy userId bị tiết lộ khi ta xem blog của tác giả --> ta tìm kiếm bài blog nào do carlos viết, truy cập vào trang liên kết với tác giả và lấy userId của carlos, truy cập lại vào trang myaccount, thay đổi giá trị tham số userId bằng giá trị vừa lấy được và lấy api key của carlos để submit.

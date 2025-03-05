@@ -1,0 +1,11 @@
+BROKEN ACCESS CONTROL: User ID controlled by request parameter with password disclosure
+
+DESCRIBE: This lab has user account page that contains the current user's existing password, prefilled in a masked input.
+To solve the lab, retrieve the administrator's password, then use it to delete the user carlos.
+You can log in to your own account using the following credentials: wiener:peter
+
+ANALYSTIC
+---------
+Ta thực hiện đăng nhập vào tài khoản đã được cấp trước đó. Ta thấy trong nội dung của trang /myaccount có chứa email và mật khẩu hiện tại của người dùng, ta không thể sao chép mật khẩu hiện tại này khi ở giao diện trang web, nhưng có thể thay đổi được và có thể thấy giá trị của nó trong response trả về. Đọc đề bài ta thấy mục tiêu là cần lấy được mật khảu hiện tại của admin và xóa carlos. Ta thử thay đổi giá trị tham số của /myaccount?id=wiener thành administrator, ta thấy ta được đưa đến trang của admin, thử sao chép trên trang nhưng không được, ta thử update mật khẩu của admin nhưng mật khẩu được update lại quay về tài khoản hiện tại đang đăng nhập --> ta không thể thay mật khẩu của admin. Tuy nhiên khi tra cứu history, ta thấy có 1 request có endpoint: GET /my-account?id=administrator, trong response có phản hồi lại thông tin của account admin và tuy trên web không hiện nhưng ta có thể tìm thấy trường sau: 
+<input required type=password name=password value='1fs9r7ijdgxzstuiapww'/>
+ta có thể lấy giá trị của trường này, thực hiện logout khỏi tài khoản hiện tại, đăng nhập vào tài khoản admin với mật khẩu vừa lấy được và thực hiện xóa carlos để hoàn thành lab.

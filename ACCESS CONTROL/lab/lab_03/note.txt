@@ -1,0 +1,7 @@
+BROKEN ACCESS CONTROL: User role controlled by request parameter
+
+DESCRIBE: This lab has an admin panel at /admin, which identifies administrators using a forgeable cookie. Solve the lab by accessing the admin panel and using it to delete the user carlos. You can log in to your own account using the following credentials: wiener:peter
+
+ANALYSTIC
+---------
+Thực hiện truy cập vào lab, sau đó đăng nhập vào tài khoản được cho trước. Ta đã biết trước là có thẻ truy cập vào giao diện của admin tại /admin, thử truy cập với tư cách wiener, ta nhận được thông báo chỉ có admin mới có thể truy cập vào. Tiếp đó ta inspect trang web, vào application ,ta thấy có 1 trường cookie Admin được đặt là false, khi thử thay đổi ta thấy thay đổi được giá trị --> nó không ngăn ta sửa đổi và có vẻ như /admin đang xác thực admin thông qua trường này --> ta đổi giá trị của nó thành true và thực hiện truy cập lại /admin --> được và thực hiện xóa carlos để hoàn thành lab. 

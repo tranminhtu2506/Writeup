@@ -1,0 +1,9 @@
+BROKEN ACCESS CONTROL: User ID controlled by request parameter with data leakage in redirect
+
+DESCRIBE: This lab contains an access control vulnerability where sensitive information is leaked in the body of a redirect response.
+To solve the lab, obtain the API key for the user carlos and submit it as the solution.
+You can log in to your own account using the following credentials: wiener:peter
+
+ANALYSTIC
+---------
+Thực hiện đăng nhập vào lab với tài khoản được cho trước, đọc đề bài ta thấy lab này có lỗ hổng trong điều khiển truy cập, cụ thể là khi ta cố gắng truy cập trái phép vào 1 tài khoản khác thì ta sẽ bị đưa ra lại trang /login tuy nhiên vẫn có response trả về cho truy cập trái phép đó. Ta thử thay đổi giá trị tham số /my-account?id=wiener thành carlos rồi truy cập, ta thấy ta bị đưa ra login, tuy nhiên khi tra cứu history, ta thấy có 1 request có endpoint: GET /my-account?id=carlos HTTP/2 và trong response của request này, ta thấy có chứa thông tin tài khoản của carlos --> lấy api key từ đây và thực hiện submit.

