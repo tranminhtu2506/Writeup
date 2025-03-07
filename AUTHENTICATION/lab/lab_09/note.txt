@@ -1,0 +1,21 @@
+AUTHENTICATION: Password reset broken logic
+
+ENDGOAL: To solve the lab, reset Carlos's password then log in and access his "My account" page.
+Your credentials: wiener:peter
+Victim's username: carlos
+
+ANALYSTIC
+---------
+Khi Burp đang chạy, hãy nhấp vào liên kết Quên mật khẩu? và nhập tên người dùng của bạn.
+
+Nhấp vào nút Email client để xem email đặt lại mật khẩu đã được gửi. Nhấp vào liên kết trong email và đặt lại mật khẩu của bạn thành bất kỳ mật khẩu nào bạn muốn.
+
+Trong Burp, hãy vào Proxy > Lịch sử HTTP và nghiên cứu các yêu cầu và phản hồi cho chức năng đặt lại mật khẩu. Lưu ý rằng mã thông báo đặt lại được cung cấp dưới dạng tham số truy vấn URL trong email đặt lại. Lưu ý rằng khi bạn gửi mật khẩu mới, POST /forgot-password?temp-forgot-password-tokenyêu cầu chứa tên người dùng dưới dạng đầu vào ẩn. Gửi yêu cầu này đến Burp Repeater.
+
+Trong Burp Repeater, hãy quan sát chức năng đặt lại mật khẩu vẫn hoạt động ngay cả khi bạn xóa giá trị của temp-forgot-password-tokentham số trong cả URL và nội dung yêu cầu. Điều này xác nhận rằng mã thông báo không được kiểm tra khi bạn gửi mật khẩu mới.
+
+Trong trình duyệt, hãy yêu cầu đặt lại mật khẩu mới và thay đổi lại mật khẩu của bạn. Gửi POST /forgot-password?temp-forgot-password-tokenyêu cầu đến Burp Repeater một lần nữa.
+
+Trong Burp Repeater, xóa giá trị của temp-forgot-password-tokentham số trong cả URL và nội dung yêu cầu. Thay đổi tham usernamesố thành carlos. Đặt mật khẩu mới thành bất kỳ mật khẩu nào bạn muốn và gửi yêu cầu.
+
+Trong trình duyệt, hãy đăng nhập vào tài khoản của Carlos bằng mật khẩu mới mà bạn vừa đặt. Nhấp vào Tài khoản của tôi để giải bài tập.

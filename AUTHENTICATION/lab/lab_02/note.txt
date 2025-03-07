@@ -1,0 +1,10 @@
+AUTHENTICATION: Username enumeration via subtly different responses
+
+ENDGOAL: To solve the lab, enumerate a valid username, brute-force this user's password, then access their account page.
+
+ANALYSTIC
+---------
+Bước 1: Truy cập vào trang web và thực hiện thử đăng nhập
+Bước 2: Quan sát phản hồi thấy thay vì invalid username thì giờ nó là invalid username or password. --> không thể dò ra username đúng được nữa
+Bước 3: Ta có thể thử gửi request đó đến repeater, vào phần setting chọn grep-extra, bôi phần Invalid username or password. sau đó ấn OK rồi tấn công. Tại sao? vì chưa chắc tất cả những phản hồi đều đưa ra cùng 1 thông điệp như nhau --> sau khi tấn công ta thấy có 1 phản hồi thiếu dấu. --> có thể là username chính xác.
+Bước 4: Ta thay username đó vào, thực hiện đánh dấu password, r sau khi tấn công sắp xếp theo Length, ta được mật khẩu --> thực hiện đăng nhập và hoàn thành lab. 

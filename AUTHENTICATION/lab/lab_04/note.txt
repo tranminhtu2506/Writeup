@@ -1,0 +1,9 @@
+AUTHENTICATION: Broken brute-force protection, IP block
+
+ENDGOAL: To solve the lab, enumerate a valid username, brute-force this user's password, then access their account page.
+
+ANALYSTIC
+---------
+Bước 1: Truy cập vào lab và thực hiện đăng nhập sai
+Bước 2: Gửi nó tới repeater và thực hiện thay đổi password và đăng nhập lại, sau vài lần thấy bị chặn IP
+Bước 3: Ta đã biết username victim, ta có tài khoản của mình và 1 danh sách mật khẩu --> từ đây ta tạo ra 2 danh sách, 1 danh sách chứa username wiener và carlos xen kẽ nhau, 1 danh sách chứa mật khẩu đúng của wiener và mật khẩu thử của carlos đan xen nhau. Gửi request tới intrusder, thực hiện tấn công pitchfork, đánh dấu username và password để bắt đầu tấn công. Sắp xếp theo Length trả về, ta thấy trong đám wiener có carlos nào thì đó là tài khoản và password đúng --> thực hiện đăng nhập và hoàn thành lab. 

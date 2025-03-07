@@ -1,0 +1,19 @@
+AUTHENTICATION: Broken brute-force protection, multiple credentials per request
+
+ENDGOAL: To solve the lab, brute-force Carlos's password, then access his account page.
+
+ANALYSTIC
+---------
+Khi Burp đang chạy, hãy điều tra trang đăng nhập. Lưu ý rằng POST /login yêu cầu gửi thông tin đăng nhập theo JSON định dạng. Gửi yêu cầu này đến Burp Repeater.
+Trong Burp Repeater, hãy thay thế giá trị chuỗi đơn của mật khẩu bằng một mảng chuỗi chứa tất cả các mật khẩu ứng viên. Ví dụ:
+
+"username" : "carlos",
+"password" : [
+    "123456",
+    "password",
+    "qwerty"
+    ...
+]
+Gửi yêu cầu. Điều này sẽ trả về phản hồi 302.
+Nhấp chuột phải vào yêu cầu này và chọn Hiển thị phản hồi trong trình duyệt . Sao chép URL và tải nó vào trình duyệt. Trang tải và bạn đã đăng nhập với tư cách là carlos.
+Nhấp vào Tài khoản của tôi để truy cập trang tài khoản của Carlos và giải bài tập.

@@ -1,0 +1,10 @@
+AUTHENTICATION: Broken brute-force protection, IP block
+
+ENDGOAL: To solve the lab, enumerate a valid username, brute-force this user's password, then access their account page.
+
+ANALYSTIC
+---------
+Bước 1: truy cập vào lab và thực hiện đăng nhập ngẫu nhiên 
+Bước 2: Gửi POST request tới /login tới intrusder, chọn chế độ bomb, đánh dấu phần username và đằng sau giá trị của password. Chọn payload cho trường thứ 2 là null, đặt generate là 5 payloads, sau đó tấn công. --> mỗi tài khoản sẽ bị tấn công 5 lần với cùng 1 mật khẩu như vậy, tài khoản nào ko tồn tại sẽ không sao, tài khoản nào tồn tại sẽ hiển thị thông báo đăng nhập quá nhiều lần --> ta sort theo độ dài trả về để nhận biết tài khoản nào tồn tại 
+Bước 3: Sau khi biết được tài khoản, note lại, đánh dấu giá trị của phần password, chọn chế độ snipe rồi thực hiện tấn công password, chọn grep extra, chọn add rồi bôi phần thông báo invalid, chọn oke rồi tấn công. --> mật khẩu nào mà responses trả về ko có thông báo lỗi thì là mật khẩu đó (vẫn trả về là chưa đăng nhập được vì hiện tại tài khoản đang bị khóa)
+Bước 4: Chờ vài phút r thực hiện đăng nhập vào tài khoản và hoàn thành lab.

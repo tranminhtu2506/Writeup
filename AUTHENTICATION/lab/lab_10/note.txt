@@ -1,0 +1,12 @@
+AUTHENTICATION: Password reset poisoning via middleware
+
+DESCRIBE: This lab is vulnerable to password reset poisoning. The user carlos will carelessly click on any links in emails that he receives. To solve the lab, log in to Carlos's account. You can log in to your own account using the following credentials: wiener:peter. Any emails sent to this account can be read via the email client on the exploit server.
+
+ANALYSTIC
+---------
+Trong đề bài có nhắc tới: The user carlos will carelessly click on any links in emails that he receives. tức là bất kì liên kết nào gửi tới email của carlos cũng sẽ được click --> nếu ta điền carlos vào phần username của forgot-password, 1 liên kết sẽ được gửi về email của carlos và carlos sẽ bấm vào ngay lập tức. 
+
+Bước 1: Truy cập vào lab, thực hiện đăng nhập với tài khoản được cấp.
+Bước 2: Đăng xuất khỏi tài khoản, ấn vào quên mật khẩu và điền username được cấp vào 
+Bước 3: Quan sát trong history, ta thấy có 1 POST request tới /forgot-password, nó sẽ gửi tới email của username được đặt bên trong 1 đường link kèm token tự động tạo để người dùng truy cập và thay đổi mật khẩu 
+Bước 4: Gửi request này tới repeater. Ta có thể thêm tiêu đề X-Forwarded-Host: để trỏ tới liên kết mà ta muốn. Ở đây ta có 1 exploit server, có thể quan sát được access log, ta điều hướng request này tới trang exploit của ta, như vậy khi victim nhận được đường dẫn, họ sẽ nhấp vào đường dẫn và nó sẽ truy cập tới trang của ta --> từ access log ta lấy được request tới có URL chứa token --> note nó lại, vào lại email của ta, nhấn vào đường dẫn được gửi, thay thế giá trị token --> lúc này ta đã vào trang đổi password của victim --> thay đổi mật khẩu mới --> đăng nhập vào tài khoản victim và ấn vào myaccount để hoàn thành lab.

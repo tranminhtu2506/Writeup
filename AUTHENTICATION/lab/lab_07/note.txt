@@ -1,0 +1,24 @@
+AUTHENTICATION: Brute-forcing a stay-logged-in cookie
+
+ENDGOAL: To solve the lab, brute-force Carlos's cookie to gain access to his My account page.
+
+ANALYSTIC
+---------
+Khi Burp đang chạy, hãy đăng nhập vào tài khoản của bạn với tùy chọn Duy trì đăng nhập được chọn. Lưu ý rằng thao tác này sẽ thiết lập stay-logged-incookie.
+Kiểm tra cookie này trong bảng điều khiển Inspector và lưu ý rằng nó được mã hóa theo Base64. Giá trị giải mã của nó là wiener:51dc30ddc473d43a6011e9ebba6ca770. Nghiên cứu độ dài và bộ ký tự của chuỗi này và lưu ý rằng nó có thể là hàm băm MD5. Vì văn bản thuần túy là tên người dùng của bạn, bạn có thể đoán một cách có căn cứ rằng đây có thể là hàm băm mật khẩu của bạn. Băm mật khẩu của bạn bằng MD5 để xác nhận rằng đây là trường hợp. Bây giờ chúng ta biết rằng cookie được xây dựng như sau:
+
+base64(username+':'+md5HashOfPassword)
+Đăng xuất khỏi tài khoản của bạn.
+GET /my-account?id=wienerTrong yêu cầu gần đây nhất, hãy tô sáng stay-logged-intham số cookie và gửi yêu cầu đến Burp Intruder.
+Trong Burp Intruder, hãy lưu ý rằng stay-logged-incookie đã được tự động thêm vào như một vị trí tải trọng. Thêm mật khẩu của riêng bạn như một tải trọng duy nhất.
+Trong Xử lý tải trọng , hãy thêm các quy tắc sau theo thứ tự. Các quy tắc này sẽ được áp dụng tuần tự cho từng tải trọng trước khi yêu cầu được gửi.
+Băm:MD5
+Thêm tiền tố:wiener:
+Mã hóa:Base64-encode
+Vì nút Cập nhật email chỉ được hiển thị khi bạn truy cập trang Tài khoản của tôi ở trạng thái đã xác thực, chúng tôi có thể sử dụng sự có mặt hoặc vắng mặt của nút này để xác định xem chúng tôi đã tấn công cookie thành công hay chưa. TrongBảng điều khiển bên cài đặt , thêm quy tắc khớp grep để đánh dấu bất kỳ phản hồi nào có chứa chuỗi Update email. Bắt đầu tấn công.
+Lưu ý rằng tải trọng được tạo đã được sử dụng để tải thành công trang tài khoản của riêng bạn. Điều này xác nhận rằng các quy tắc xử lý tải trọng hoạt động như mong đợi và bạn có thể xây dựng một cookie hợp lệ cho tài khoản của riêng bạn.
+Thực hiện các điều chỉnh sau và lặp lại đòn tấn công này:
+Xóa mật khẩu của bạn khỏi danh sách dữ liệu và thêm danh sách mật khẩu ứng viên .
+Thay đổi idtham số trong URL yêu cầu carlosthành wiener.
+Thay đổi quy tắc Thêm tiền tố thành thêm carlos:thay vì wiener:.
+Khi cuộc tấn công kết thúc, phòng thí nghiệm sẽ được giải quyết. Lưu ý rằng chỉ có một yêu cầu trả về phản hồi có chứa Update email. Tải trọng từ yêu cầu này là stay-logged-incookie hợp lệ cho tài khoản của Carlos.

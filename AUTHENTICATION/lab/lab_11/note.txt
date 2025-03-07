@@ -1,0 +1,18 @@
+AUTHENTICATION: Password brute-force via password change
+
+DESCRIBE: This lab's password change functionality makes it vulnerable to brute-force attacks. To solve the lab, use the list of candidate passwords to brute-force Carlos's account and access his "My account" page.
+Your credentials: wiener:peter
+Victim's username: carlos
+
+ANALYSTIC
+---------
+Bước 1: Truy cập vào lab và thực hiện đăng nhập với tài khoản được cấp 
+Bước 2: Sau khi đăng nhập ta thấy, để thay đổi mật khẩu có 3 trường, mật khẩu hiện tại, mật khẩu mới và nhập lại mật khẩu mới --> thử thay đổi mật khẩu 
+Bước 3: Quan sát history, ta thấy POST request gửi tới /my-account/change-password với nội dung phần body như sau: username=wiener&current-password=peter&new-password-1=1&new-password-2=1
+ta thấy phần username bị ẩn đi.
+Bước 4: vì mục tiêu của ta là thực hiện tấn công brute-force, nên ta nên thử những trường hợp khi ta nhập sai mật khẩu và xem phản hồi của trang, có 3 trường hợp như sau:
+Ta thử nhập sai mật khẩu hiện tại nhưng 2 mật khẩu mới trùng nhau --> ta bị đưa ra trang login;
+Nếu ta nhập sai mật khẩu hiện tại nhưng 2 mật khẩu mới khác nhau --> thông báo Current password is incorrect
+Ta nhập đúng mật khẩu hiện tại nhưng 2 mật khẩu mới khác nhau --> thông báo New passwords do not match
+Dựa vào phản hồi này, ta sẽ gửi request đổi mật khẩu tới intrusder, thay đổi trường username thành carlos, đánh dấu giá trị của mật khẩu hiện tại để tấn công, để 2 mật khẩu mới khác nhau để không bị đẩy ra ngoài --> thực hiện tấn công brute-force. Ta sẽ tìm phản hồi nào có độ dài trả về bất thường, note lại mật khẩu đó, sau đó gửi request này tới repeater, thực hiện điền mật khẩu đó và điền mật khẩu mới muốn đổi rồi Send. 
+Bước 5: Ta thực hiện đăng nhập vào account nạn nhân với username đã biết và mật khẩu vừa đổi, ấn vào myaccount để hoàn thành lab. 
