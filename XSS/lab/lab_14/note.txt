@@ -1,0 +1,25 @@
+XSS - Reflected XSS with some SVG markup allowed
+
+End Goal: To solve the lab, perform a cross-site scripting attack that calls the alert() function.
+
+Analystic
+---------
+Bước 1: Đọc đề bài ta thấy tường lửa của ứng dụng web cho phép thẻ svg có thể hoạt động. Tuy nhiên ta chưa biết các thẻ nào đi kèm hay thuộc tính nào đi kèm hay còn thẻ nào khác ngoài svg hoạt động nên ta sẽ copy tất cả các thẻ sau đó thực hiện tấn công bằng intrusder để xem có những thẻ nào có thể hoạt động.
+Bước 2: Sau khi tấn công ta thấy có 1 số thẻ có thể hoạt động như image, svg, title. Tuy nhiên khi thay thẻ image vào và thực hiện tấn công để tìm ra thuộc tính của nó, ta không thấy có thuộc tính nào có thể hoạt động --> bỏ thẻ image. 
+Ở đây ta thấy svg có thể hoạt động được và svg có thể có 1 số thẻ đi kèm như animate, animatemotion, animatetransform, set. Sau khi thử thì chỉ có thẻ animatetransform là có thể qua tường lửa.
+Bước 3: Sau khi đã biết thẻ có thẻ hoạt động, ta tiếp tục thực hiện tấn công để tìm xem có thuộc tính nào có thể hoạt động trên thẻ đó --> ta được 1 thuộc tính hoạt động là onbegin.
+Vậy có 2 thứ ta cần phải hiểu: 
+1. Cách hoạt động của thẻ animatetransform là gì?
+2. Sự kiện onbegin là như thế nào ?
+
+Trước hết về thẻ animatetransform:
+Là 1 phần tử tạo chuyển đổi cho thuộc tính trên phần tử mục tiêu, do đó cho phép hoạt ảnh kiểm soát chuyển động tịnh tiến, thay đổi tỉ lệ, xoay và/hoặc nghiêng. --> Nghe có vẻ như không có tác dụng trong trường hợp này vì tất cả các thuộc tính đi kèm với svg đều bị chặn và svg cũng k có gì để hiển thị --> ta không thể sử dụng được tác dụng chuyển đổi cho thuộc tính của mục tiêu.
+
+Tiếp theo là về onbegin:
+- Sự beginEventkiện của SVGAnimationElementgiao diện được kích hoạt khi dòng thời gian cục bộ của phần tử bắt đầu phát. Sự kiện này sẽ được kích hoạt mỗi khi phần tử bắt đầu thời gian hoạt động (tức là khi nó khởi động lại, nhưng không phải khi nó lặp lại).
+Nó có thể được đưa ra trong quá trình phát dòng thời gian bình thường (tức là theo lịch trình hoặc tương tác), cũng như trong trường hợp phần tử được bắt đầu bằng phương thức DOM.
+- Sử dụng tên sự kiện trong các phương thức như addEventListener(), hoặc đặt thuộc tính trình xử lý sự kiện.addEventListener("beginEvent", (event) => {});
+onbegin = (event) => {};
+Ta có thể hiểu sự kiện này sẽ chạy 1 hàm khi phần tử được khởi động. Ta có thể thấy khi ta tìm kiếm <svg><animatetransform> trang phải load lại --> khởi động --> ta có thể sử dụng thuộc tính này = alert(1) để thực hiện tấn công XSS. --> ta có payload như sau:
+<svg><animatetransform onbegin=alert(1)></animatetransform>
+--> giải quyết được lab. 

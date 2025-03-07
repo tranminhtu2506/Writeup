@@ -1,0 +1,15 @@
+XSS - Reflected XSS into HTML context with nothing encoded
+
+End Goal: perform a cross-site scripting attack that calls the alert function.
+
+Analystic
+---------
+Bước 1: điền tmt vào ô tìm kiếm và search
+Bước 2: Kiểm tra mã nguồn và thấy tmt được ghi trong 1 thẻ h1
+Không thấy thông tin gì về mã JS, có vẻ từ khóa được trả về thông qua PHP
+Bước 3: vì không thấy biện pháp bảo vệ nào, thử đặt tên khóa trong 1 thẻ nào đó để kết hợp hiển thị như <strong>
+--> thấy từ khóa có được in đậm --> được đưa vào trực tiếp mà ko có xử lý gì --> có thể XSS
+Bước 4: điền vào ô tìm kiếm: <script>alert(1)</script>
+--> h1 trở thành:
+<h1>
+    "0 search results for '"<script>alert(1)</script>"'"</h1>

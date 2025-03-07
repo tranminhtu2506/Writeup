@@ -1,0 +1,12 @@
+Yêu cầu: Phòng thí nghiệm này chứa lỗ hổng mã lệnh chéo trang phản ánh trong chức năng blog tìm kiếm. Sự phản ánh xảy ra bên trong chuỗi mẫu với dấu ngoặc nhọn, dấu ngoặc đơn và dấu ngoặc kép được mã hóa HTML và dấu ngoặc kép ngược được thoát. Để giải quyết phòng thí nghiệm này, hãy thực hiện một cuộc tấn công mã lệnh chéo trang gọi hàm alertbên trong chuỗi mẫu.
+
+Giải pháp: 
+- Trang web này có điểm nhập đầu vào là tìm kiếm theo từ khóa của blog:
++) Sau khi thực hiện tìm kiếm từ khóa --> ta tìm thấy 1 đoạn script được sử dụng để xử lý từ khóa:
+var message = `0 search results for 'tmt'`;
+document.getElementById('searchMessage').innerText = message;
+--> Ta thấy có sử dụng innerText mà dấu >, ', " , \ và dấu " Unicode được thoát --> ta không thể tạo thêm thẻ hay kết thúc hay tạo thêm thuộc tính 
+--> Nếu tấn công ta cần thực hiện mã JS ngay trong đoạn script, ta thấy ở đây chuỗi được bao bởi `` --> ta có thể thử sử dụng ${alert()} để thực thi mã. 
+==> PAYLOAD: ${alert(1)}
+
+                        

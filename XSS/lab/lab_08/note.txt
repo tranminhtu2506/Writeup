@@ -1,0 +1,10 @@
+XSS - DOM XSS in AngularJS expression with angle brackets and double quotes HTML-encoded
+
+End Goal: perform a cross-site scripting attack that executes an AngularJS expression and calls the alert function.
+
+Analystic
+---------
+Để qua lỗ hổng này ta chỉ cần tìm kiếm dấu hiệu của việc sử dụng AngularJS là ng-app, trong bài này là thẻ body --> ta có thể thực thi js trong dấu {}; điền lệnh sau vào ô search để thực hiện mã js:
+{{$on.constructor('alert(1)')()}}
+
+tuy nhiên để hiểu rõ bài này, cần xây dựng 1 app bằng AngularJS rồi hack. 

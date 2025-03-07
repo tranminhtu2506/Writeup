@@ -1,0 +1,14 @@
+XSS - Stored XSS into onclick event with angle brackets and double quotes HTML-encoded and single quotes and backslash escaped
+
+End Goal: To solve this lab, submit a comment that calls the alert function when the comment author name is clicked.
+
+Analystic
+---------  
+Bước 1: Bấm vào view 1 bài post 
+Bước 2: vào DOM tìm postId để xem link của trang web có được đặt vào trong thuộc tính href của thẻ a không --> không --> không thể tấn công XSS vào link của trang web hiện tại 
+Bước 3: Đọc tiêu đề của lab ta thấy ta sẽ tấn công vào sự kiện onclick của 1 thẻ a --> ở trong trang hiện tại chỉ có phần website nằm trong phần comment --> tuy nhiên phần website lại yêu cầu đúng định dạng --> dữ liệu truyền vào phải dưới dạng: https://example.com. Ta thử điền vào là 1 trang web hợp lệ 
+Bước 4: Sau khi điền xong comment ta quay lại, ấn inspect vào phần tên của tác giả ta thấy link web đã được đặt vào trong ngoặc. Ta thử cố gắng kết thúc chuỗi bằng dấu " xem có được không --> không được --> không thể tấn công ở chỗ này 
+Bước 5: Tuy nhiên nhìn vào sự kiện onclick, ta thấy như sau:
+<a id="author" href="https://google.com" onclick="var tracker={track(){}};tracker.track('https://google.com');">tmt1</a>
+Vì vậy ta thử thay vì tấn công và href, ta tấn công vào onclick bằng cách đóng sớm lại thành https://google.com'. --> tuy nhiên ta thấy ' đã bị thoát bằng kí tự thoát \ vì vậy ta thử lại lần nữa bằng cách thêm 1 dấu \ ở đằng trước ' như sau: https://google.com\' tuy nhiên dấu \ cũng bị thoát. Vì vậy ở đây ta nghĩ đến thay dấu ' thành 1 chuỗi mã hóa của nó như: &apos; ta thấy có thể kết thúc chuỗi sớm --> ta có payload cuối cùng:
+https://google.com&apos;-alert(document.domain)-&apos;

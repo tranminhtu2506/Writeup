@@ -1,0 +1,12 @@
+XSS - Stored XSS into anchor href attribute with double quotes HTML-encoded
+
+End Goal: To solve this lab, submit a comment that calls the alert function when the comment author name is clicked.
+
+Analystic
+---------
+Bước 1: Ấn vào view post để xem 1 bài bất kì 
+Bước 2: Ta thấy có phần Leave a comment --> điền đầy đủ thông tin vào 
+Bước 3: Ấn Back to post để quay lại xem comment vừa đăng
+Bước 4: Ta có thể thấy trong phần comment trước đó có 1 phần là website và lúc này ta thấy tên của tác giả comment được đổi thành màu tìm --> ấn inspect ta thấy nó là 1 thẻ a có thuộc tính href có giá trị là trang web lúc trước ta điền vào 
+--> Ta có thể thử điền linh tinh vào phần này ví dụ như 123 để xem có điền được k --> Điền được --> ở đây không có kiểm tra định dạng của giá trị được điền vào trường này --> ta có thể lợi dụng lỗ hổng này để điền vào mã JS của ta : javascript:alert(1). 
+Vì ta đang cố chèn giá trị là 1 mã JS vào thuộc tính href --> ta sẽ đặt lại thành thế này để có thể kích hoạt được mã 

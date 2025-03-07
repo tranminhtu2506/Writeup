@@ -1,0 +1,25 @@
+XSS - DOM XSS in innerHTML sink using source location.search
+
+End Goal: perform a cross-site scripting attack that calls the alert function.
+
+Analystic
+---------
+Bước 1: Nhập từ khóa tìm kiếm tmt 
+Bước 2: xem phản hồi của trang web, mở mã của trang web lên và tìm kiếm từ khóa 
+ta thấy từ khóa được đặt trong 1 thẻ span
+và tìm được 1 đoạn mã JS như sau:
+function doSearchQuery(query) {
+    document.getElementById('searchMessage').innerHTML = query;
+}
+var query = (new URLSearchParams(window.location.search)).get('search');
+if(query) {
+    doSearchQuery(query);
+}
+
+ta thấy ở đây có sử dụng innerHTML để thực hiện thay đổi trực tiếp 1 phần tử HTML của trang web, tuy nhiên innerHTML khác với document.write là nó không chấp nhận chèn mã script vào và cũng ko chấp nhận những thẻ như <svg onload=""> nên ta không thể sử dụng cả 2 cách 
+
+Tuy nhiên ta thấy khi tìm kiếm 1 từ khóa có kết quả trả về, ta thấy có thẻ div class="blog-post" chứa 1 thẻ a có đường dẫn dẫn đến bài viết và thẻ ảnh img chứa ảnh (không cần kiểm tra cũng được) --> ta có thể thao túng bằng cách thêm 1 thẻ ảnh vào ô tìm kiếm để thực hiện alert(1), có 2 cách:
+1. Ta có thể copy đường dẫn hợp lệ của 1 ảnh đặt vào src sau đó đặt thêm onload để nó thực hiện 
+2. Ta có thể đặc src bất kì sau đó sử dụng onerror để bắt sự kiện vì đường dẫn ko hợp lệ --> lỗi --> bắt sự kiện này và thực hiện alert(1)
+
+

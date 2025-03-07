@@ -1,0 +1,12 @@
+Yêu cầu: Phòng thí nghiệm này chứa lỗ hổng thực thi mã lệnh chéo trang trong chức năng theo dõi truy vấn tìm kiếm, trong đó dấu ngoặc nhọn và dấu ngoặc kép được mã hóa HTML và dấu ngoặc đơn được thoát.
+Để giải quyết phòng thí nghiệm này, hãy thực hiện một cuộc tấn công mã lệnh chéo trang web để thoát khỏi chuỗi JavaScript và gọi alert hàm.
+
+Giải pháp: 
+- Trang này có điểm vào là phần tìm kiếm theo từ khóa và điền bình luận của post:
++) Phần tìm kiếm theo từ khóa: sau khi tìm từ khóa, ta thấy 1 đoạn script được dùng để xử lý từ khóa:
+var searchTerms = 'tmt';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+Ở đây ta thấy từ khóa được encode sau đó đưa vào thuộc tính của thẻ img --> ta không thể kết thúc sớm thẻ và tạo thêm thuộc tính 
+--> Để tấn công ta cần thực hiện lệnh ngay trong đoạn script này, --> ta cố gắng thoát khỏi chuỗi và chèn lệnh vào --> thử chèn vào'-alert(1);\\ --> ta thấy thực hiện được lệnh 
+==> PAYLOAD: '-alert(1);\\  
+

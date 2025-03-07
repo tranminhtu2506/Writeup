@@ -1,0 +1,11 @@
+Yêu cầu: Phòng thí nghiệm này chứa lỗ hổng thực thi mã lệnh chéo trang được lưu trữ trong chức năng bình luận.
+Để giải quyết bài tập này, hãy gửi bình luận gọi hàm alert khi nhấp vào tên tác giả bình luận.
+
+Giải pháp: 
+- Trang web này chỉ có đầu vào là phần bình luận của các bài post:
++) Có 4 phần chính: nội dung bình luận, tên người dùng, email và web; tuy nhiên email không được phản hồi lại trong trang web --> phần này không thể khai thác 
++) Ta tìm thấy phần web của người dùng được đưa vào trong thẻ sau: 
+<a id="author" href="https://google.com'-alert(1)-'" onclick="var tracker={track(){}};tracker.track('https://google.com'-alert(1)-'');">tmt1</a>
++) Ta biết " và > đã bị mã hóa HTML --> ta không thể kết thúc sớm sự kiện và tạo thêm sự kiện mới để kích hoạt mã JavaScript
+--> chỉ còn có thể tấn công từ sự kiện onclick và trong đó có chứa mã JS. Tuy nhiên ' và \ đã bị thoát và phải điền đúng format. Tuy nhiên nó không bị mã hóa trước khi chèn vào --> ta lợi dụng việc ứng dụng sẽ giải mã ký tự trước khi đưa vào trang --> ta thiết kế payload như sau: https://google.com&#x27;-alert(1)-&#x27; 
+ 

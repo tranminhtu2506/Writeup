@@ -1,0 +1,27 @@
+XSS - Exploiting XSS to perform CSRF
+
+End Goal:  To solve the lab, exploit the vulnerability to perform a CSRF attack and change the email address of someone who views the blog post comments.
+
+Analystic
+---------
+Sau khi truy cập trang web, ta thử đăng nhập bằng tài khoản được cấp, ta thử thực hiện thay đổi email của tài khoản hiện tại sau đó quan sát trong history của Burp. Ta thấy khi thực hiện thay đổi email, trang web thực hiện 1 http request như sau:
+POST /my-account/change-email HTTP/2
+.....
+email=123%40gmail.com&csrf=KZjVhnioE0MFzLIUVy0l2nmRsxCDJyt0
+Có 3 điều chính mà ta cần chú ý ở đây: 1. phương thức được gửi sử dụng là POST, 2. điểm cuối của request là /my-account/change-email, 3. nội dung của gói tin gồm email mới và csrf (tức là không có username hay mật khẩu ở đây). Từ những thông tin này ta có thể kết luận, nếu muốn thay đổi gói tin ta chỉ cần biết được csrf của nạn nhân là có thể thay đổi email của tài khoản thành email mà ta kiểm soát, từ đó có thể sử dụng việc quên mật khẩu hoặc tương tự để thay đổi lại mật khẩu của tài khoản từ đó chiếm tài khoản. 
+Đã biết được mục tiêu, giờ ta cần thiết kế 1 payload để thực hiện sửa đổi email của nạn nhân, ta có payload như sau:
+<script>
+    window.addEventListener('DOMContentLoaded', function(){
+        var token = document.getElementsByName('csrf')[0].value;
+        var data = new FormData();
+        data.append('email','victim@gmail.com');
+        data.append('csrf',token);
+        fetch('/my-account/change-email',{
+            method: 'POST',
+            mode: 'no-cors',
+            body: data
+        });
+    });
+   
+</script>
+Trước hết, ta thấy phần comment ở trong các bài post là không lọc đầu vào, vì vậy ta có thể chèn vào mã script để thực hiện tấn công xss. Như đã biết từ 2 lab trước, để có thể lấy được xss của trang web của nạn nhân, ta có thể sử dụng document.getElementsByName('csrf')[0].value và gán nó vào 1 biến. tiếp đến ta quan sát form thay đổi email của tài khoản của mình, thấy nó gồm 2 trường input: 1 là của email và 1 là của csrf, từ đây ta dựng lại 1 form từ biến data, gồm 2 trường là email với giá trị là email mới và csrf là giá trị của biến token. Tiếp đó vì đã biết điểm cuối của request, ta truyền nó vào hàm fetch API, cùng với method đã biết là POST và body là form data vừa tạo. Sau khi comment xong, khi người dùng truy cập, họ sẽ tự động gửi 1 request để trang thay đổi email và đổi email mới theo email mà ta vừa truyền trước đó, từ đó giải quyết được bài lab. 

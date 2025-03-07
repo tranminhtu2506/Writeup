@@ -1,0 +1,39 @@
+XSS - DOM XSS in document.write sink using source location.search
+
+End Goal:  perform a cross-site scripting attack that calls the alert function.
+
+Analystic
+---------
+Bước 1: Nhập từ khóa tìm kiếm vào thanh tìm kiếm 
+Bước 2: Tìm kiếm từ khóa vừa rồi trong mã của trang xem nó được xuất hiện ở đâu
+Bước 3: Có thể thấy nó được xuất hiện ở 2 nơi là:
+1. thẻ <h1> ... 'từ khóa' </h1>
+2. thẻ <img src="/..../tracker.gif?searchTerms=từ khóa">
+Bước 4: ta đặt thử từ khóa vào thẻ strong như lab_02 nhưng h1 trở thành:
+<h1>...'<strong>tmt</strong>'</h1> --> có vẻ như đầu ra ở đây đã được xử lí để biến chúng thành 1 chuỗi thay vì 
+là thẻ chứa chuỗi --> không XSS được ở đây
+Bước 5: Ta tìm thấy 1 tập lệnh script trong mã như sau:
+function trackSearch(query) {
+        document.write('<img src="/resources/images/tracker.gif?searchTerms='+query+'">');
+        }
+        var query = (new URLSearchParams(window.location.search)).get('search');
+        if(query) {
+               trackSearch(query);
+        }
+
+- ta thấy ở đây có document.write:
++) Tác dụng của document.write()
+document.write() là một phương thức trong JavaScript được sử dụng để ghi trực tiếp nội dung vào trang HTML. Nội dung này có thể là văn bản đơn thuần, các thẻ HTML, thậm chí cả đoạn mã JavaScript.--> đây có thể là lỗ hổng để tấn công XSS
+- URLSearchParams là một đối tượng trong JavaScript được sử dụng để thao tác với chuỗi truy vấn (query string) của một URL. Nó cung cấp một cách dễ dàng để đọc, viết và sửa đổi các tham số trong URL, giúp bạn làm việc với các dữ liệu được truyền qua URL một cách hiệu quả hơn.
+    +)  Chuyển đổi chuỗi truy vấn của một URL thành một đối tượng dễ quản lý, cho phép bạn truy cập từng tham số một cách dễ dàng.
+    +) Cho phép bạn tạo ra một chuỗi truy vấn mới dựa trên các tham số đã có hoặc các tham số mới.
+    +) Bạn có thể dễ dàng thêm, xóa hoặc cập nhật giá trị của các tham số trong chuỗi truy vấn.
+    --> dòng code có tác dụng: lấy ra giá trị của một tham số có tên là "search" từ URL hiện tại của trang web, sau đó gán giá trị đó vào biến query
+    window.location.search: là tất cả những chuỗi ở đằng sau dấu ? trong url
+    new URLSearchParams(window.location.search): Tạo một đối tượng URLSearchParams mới. Đối tượng này được khởi tạo bằng chuỗi truy vấn vừa lấy được ở trên. 
+    .get('search'): Gọi phương thức .get('search') trên đối tượng URLSearchParams vừa tạo. Phương thức này sẽ lấy ra giá trị của tham số có tên là "search" vd: academy.net/?search=123 --> lấy 123
+    cuối cùng là nếu query không rỗng thì truyền nó vào hàm trackSearch --> ghi cả query vào thẻ img, mà query có thể là cả mã js html .... --> có thể xss ở điểm này 
+Bước 6: ta thử đặt từ khóa là tmt" --> ta thấy phần src="..." của ảnh bị kết thúc sớm hơn --> có thể lợi dụng để đặt thêm thuộc tính cho thẻ , sau khi nhập từ khóa ta thấy trang bị load lại 1 lần nữa --> có thể sử dụng thuộc tính onload cho thẻ 
+--> nhập từ khóa là " onload="alert(1) 
+
+     

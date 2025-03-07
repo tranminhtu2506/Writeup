@@ -1,0 +1,34 @@
+XSS - DOM XSS in document.write sink using source location.search
+
+End Goal:  perform a cross-site scripting attack that calls the alert function.
+
+Analystic
+---------
+Bước 1: Chọn 1 sản phẩm để viewdetail 
+Bước 2: Chọn 1 nơi để check và chọn check stock
+Bước 3: Mở mã web lên và kiểm tra phần select option
+Bước 4: Sau khi kiểm tra mã ta thấy có 1 đoạn script như sau:
+
+var stores = ["London","Paris","Milan"];
+var store = (new URLSearchParams(window.location.search)).get('storeId');
+document.write('<select name="storeId">');
+if(store) {
+    document.write('<option selected>'+store+'</option>');
+}
+for(var i=0;i<stores.length;i++) {
+    if(stores[i] === store) {
+        continue;
+    }
+    document.write('<option>'+stores[i]+'</option>');
+}
+document.write('</select>');
+
+Đoạn mã trên sử dụng document.write để thực hiện thay đổi trực tiếp với phần tử html của trang, mà document.write có thể ghi vào trang cả phần tử html, script, văn bản,.... --> có thể lợi dụng điểm này 
+Ta thấy biến store được gán sau khi lấy truy vấn từ url và lấy giá trị của tham số storeId, ta có url hiện tại có truy vấn như sau: web-security-academy.net/product?productId=1 --> không có storeId --> chỉ có 3 lựa chọn mặc định trong phần store 
+--> Ta có thể thêm tham số vào truy vấn là &storeId=test và quan sát phản hồi của web 
+--> ở phần option có thêm lựa chọn test của ta --> js có hoạt động, tuy nhiên không thể chèn mã js hay thẻ html kết hợp với nội dung vào vì thẻ option được thiết kế chứa các tùy chọn đơn giản, thường là văn bản, mà khi trình duyệt gặp thẻ <script>, nó sẽ chuyển sang chế độ thực thi JavaScript. Tuy nhiên, khi đang xử lý nội dung của một thẻ <option>, trình duyệt không mong đợi gặp một thẻ <script> và sẽ không thực thi đoạn mã đó.
+--> ta cần thoát khỏi thẻ option (hoặc thẻ select) để chèn thêm đoạn mã <script>alert(1)</script>
+Ta có nhiều hơn 2 cách nhưng có 2 cách đơn giản để thực hiện:
+1. Chèn vào &storeId=tmt</option></select><script>alert(1)</script> --> cách này giúp đóng thẻ option sớm hơn và đóng thẻ select sớm hơn --> đưa được mã js ra ngoài thẻ select để thực thi 
+2. Chèn vào &storeId=tmt</option><script>alert(1)</script><option>tmt2 --> cách này giúp đóng sớm thẻ option đầu là tmt và thêm mã js cùng 1 thẻ option sau là tmt2 vào trong select --> vẫn đưa được mã JS ra khỏi thẻ option để thực thi 
+

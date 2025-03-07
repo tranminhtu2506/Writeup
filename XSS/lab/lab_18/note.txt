@@ -1,0 +1,22 @@
+XSS - Reflected XSS into a JavaScript string with angle brackets HTML encoded
+
+End Goal: To solve this lab, perform a cross-site scripting attack that breaks out of the JavaScript string and calls the alert function.
+
+Analystic
+---------
+Bước 1: Thử tìm kiếm từ khóa tmt và xem nó được lưu trữ hay phản hồi ở đâu trong DOM
+Bước 2: Sau khi tìm kiếm từ khóa trong DOM, ta thấy từ khóa xuất hiện trong 1 đoạn <script> và được đặt trong 1 cặp ' và được gán cho biến var SearchTerms
+
+var searchTerms = 'tmt';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+                    
+Bước 3: Ta thử tìm kiếm tmt' xem có thể đóng sớm được ko hay kí tụ ' có bị thoát không --> được kết quả:
+
+var searchTerms = 'tmt'';
+document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIComponent(searchTerms)+'">');
+                    
+Ta thấy ở đây chuỗi được gán cho biến đã bị đóng sớm hơn bằng dấu ', ta có thể lợi dụng điểm này để tấn công XSS.
+Bước 4: Có 2 cách để tấn công xss trong trường hợp này:
+Cách 1: thực hiện tìm kiếm: tmt'-alert(1)-'
+Cách 2: thực hiện tìm kiếm: tmt';alert(1);//
+Tại sao lại phải làm vậy mà không cố gắng đóng thẻ <script> sớm rồi chèn thêm phần tử và bắt sự kiện DOM để chạy lệnh? --> vì ở đây dấu <> đã bị mã hóa --> ta không thẻ chèn thêm thẻ được, tuy nhiên dấu ' lại không bị chèn thêm dấu \ để thoát kí tự --> khi ta chèn vào sẽ kết thúc được sớm chuỗi. 

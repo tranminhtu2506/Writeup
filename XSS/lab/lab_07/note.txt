@@ -1,0 +1,63 @@
+XSS - DOM XSS in jQuery selector sink using a hashchange event
+
+End Goal:  deliver an exploit to the victim that calls the print() function in their browser.
+
+Analystic
+---------
+Bước 1: Vào thử 1 bài post, comment r check trong mã web xem có gì đặc biệt không --> không --> không khai thác xss được từ đây 
+Bước 2: Quay lại trang chủ r xem lại mã web xem có gì đặc biệt ko được 1 đoạn script:
+
+$(window).on('hashchange', function(){
+    var post = $('section.blog-list h2:contains(' + decodeURIComponent(window.location.hash.slice(1)) + ')');
+    if (post) post.get(0).scrollIntoView();
+});
+
+giải thích code: 
+$(window).on('hashchange', function() { ... }): Dòng này đặt một "người nghe" (event listener) cho cửa sổ trình duyệt (window). Người nghe này sẽ "nghe" xem có sự thay đổi nào xảy ra ở phần "hash" (phần sau dấu #) trong URL hay không. Ví dụ, khi bạn click vào một link có dạng https://example.com/#section2, phần "hash" sẽ là #section2.
+
+var post = $('section.blog-list h2:contains(' + decodeURIComponent(window.location.hash.slice(1)) + ')');:
+    window.location.hash: Lấy ra phần "hash" hiện tại từ URL.
+    .slice(1): Loại bỏ ký tự # đầu tiên của phần "hash".
+    decodeURIComponent(): Giải mã các ký tự đặc biệt trong phần "hash" (nếu có).
+    $('section.blog-list h2:contains(' + decodedHash + ')'): Tìm kiếm tất cả các thẻ <h2> nằm trong một phần tử có class là blog-list và có nội dung chứa phần "hash" đã được giải mã.
+
+if (post) post.get(0).scrollIntoView();
+if (post): Kiểm tra xem có tìm thấy thẻ <h2> nào không.
+post.get(0): Lấy ra phần tử đầu tiên trong danh sách các thẻ <h2> tìm được (thường chỉ có một).
+.scrollIntoView(): Cuộn trang để đưa phần tử <h2> vừa tìm được vào vị trí hiển thị trên màn hình.
+
+Ví dụ: ta thực hiện thêm tham số vào sau của # là Procrastination --> lúc này phần code của chúng ta sẽ thành:
+ $('section.blog-list h2:contains(Procrastination)') --> thử lệnh này trong console ta thấy có kết quả như sau:  
+--> kết quả trả về 1 object có vài thông số đáng chú ý là:
+0: h2, selector: 'section.blog-list h2:contains(Procrastination), length: 1 
+Tức là đối tượng có 1 thuộc tính là length:1 --> nói cách là bộ chọn này có 1 kết quả khớp. Chúng ta có thể hiển thị phần tử DOM bằng cách gán kết quả của bộ chọn này cho biến post rồi sử dụng thuộc tính get(0) như sau:
+var post = $('section.blog-list h2:contains(Procrastination)')
+post.get(0)
+--> ta được kết quả trả về như sau: <h2>Procrastination</h2>
+
+Giờ nếu ta thực hiện 1 với phần hash là 1 giá trị không tồn tại trong trang thì sao?
+ví dụ ta sử dụng: $('section.blog-list h2:contains(tmt)'). Nó vẫn trả về 1 đối tượng nhưng có 1 số sự khác biệt: không còn có 0: nữa và length lúc này là :0 --> không có kết quả nào khớp. Tuy nhiên nó vẫn là 1 đối tượng được trả về --> nếu đặt nó vào điều kiện if(post) với post lúc này là kết quả của đối tượng được trả về --> nó sẽ được coi là 1 điều kiện true vì post khác null, ví dụ như sau:
+
+if(post) console.log("true") --> sẽ trả về true, nếu điều kiện được sửa thành post.get(0) thì đã không thể khai thác được vì lúc này ko còn kết quả nào được trả về nữa --> có thể lợi dụng điểm này để khai thác xss.
+
+Trong các tài liệu phần tham số trong contains() phải là 1 chuỗi nhưng trên thực tế ta có thể truyền 1 thẻ ví dụ như: contains(<h1>tmt</h1>) --> lúc này post trả về 1 đối tượng có 0: h1 và length: 1 tức là 1 có kết quả khớp, chắc chắn rằng trong trang không có nhưng tại sao nó lại hiển thị có kết quả khớp? vì nó tạo ra 1 phần tử dom tách rời và chưa được gắn trong trang, thậm chí nếu sử dụng post.get(0) sẽ hiển thị ra thẻ h1 đó.
+
+Vì phần tử dom này có tồn tại nên ta có thể gắn nó vào trang web, giờ ta cần tạo cho nó 1 nút cha, tìm 1 thẻ có chứa id ta được <div id="academyLabHeader">, ta tạo 1 biến var myNode = document.getElementById('academyLabHeader') --> lấy thẻ div gán vào myNode, giờ ta cần thẻ h1 vừa tạo là con của nó, sử dụng:
+myNode.appendChild(post); --> lúc này trang đã có thêm 1 phần tử h1 của ta. Từ đây ta thấy bước đầu để hiểu lỗ hổng này là mặc dù phương thức :contains thực sự chỉ là 1 chức năng tìm kiếm, nó chỉ nên tìm kiếm DOM hiện có nhưng có thể thấy nếu chúng ta chèn vào thẻ thay vì 1 chuỗi hợp pháp, jQuery thực sự đang tạo 1 nút DOM trong nền và chính điều này gây ra lỗ hổng. 
+Có vài điều cần biết về các nút DOM có thẻ src lấy thứ gì đó giống như 1 phần tử hình ảnh, chẳng hạn như nó có thuộc tính nguồn và dựa trên thuộc tính nguồn đó, nó đưa ra yêu cầu http để lấy dữ liệu hình ảnh, vì vậy hãy tạo 1 phần tử mới bằng cách sử dụng JS thuần túy:
+let myImg = document.createElement('img'); --> tạo thẻ img gán vào phần tử myImg
+myImg.src = 0 --> đặt src của thẻ img thành 0 
+Vào phần network kiểm tra ta có thể thấy nó đã cố thực hiện 1 http request có header là: 0a5a0058035562ea80fcee6a006b00f5.web-security-academy.net/0 và nhận được response là not found 
+--> có thể thấy mặc dù phần tử hình ảnh này chưa được gắn vào form nhưng khi thêm thuộc tính src, trình duyệt gửi yêu cầu HTTP đó, nó gặp lỗi 404 vì rõ ràng hình ảnh ko tồn tại
+--> mặc dù chúng ta không thể khai thác lỗ hổng jQuery để thực sự nối 1 phần tử vào DOM, chúng ta có thể tạo 1 hình ảnh tách rời để tạo yêu cầu HTTP request sau đó, khi nhận được phản hồi 404 chúng ta có thể kích hoạt 1 số JS.
+
+Giờ quay trở lại, thay vì tạo 1 thẻ H1, ta có thẻ tạo 1 thẻ img với src lỗi và kích hoạt onerror để kích hoạt JS
+var post = $('section.blog-list h2:contains(<img src="0" onerror="alert(1)")')
+--> điều này sẽ thực hiện 1 http request để tìm ảnh --> lỗi --> trang hiển thị alert(1)
+Nếu ta đặt thẻ này lên url và kèm dấu # ở đằng trước trang cũng sẽ hiển thị alert(1).
+
+Giờ ta cần khai thác này phải được tự động hóa và nghĩa là trình duyệt của người dùng cần thay đổi hash đó bằng JS. Để trình duyệt nhận được điều đó trong sự kiện thay đổi hàm băm và sao đó thực thi JS và 1 trong những cách rõ ràng để thực hiện điều đó là bằng iframe và nó sẽ là 1 iframe thay đổi giá trị băm sau khi tải nên người dùng sẽ nhận được 1 trang bình thường trong iframe sau khi tải xong, sau đó js sẽ thay đổi giá trị của hàm hash đó để phản hồi lại iframe đang tải.
+
+Giờ tới phần máy chủ khai thác và chỉnh sửa body thành:
+<iframe src="https://0a5a0058035562ea80fcee6a006b00f5.web-security-academy.net/#" onload="this.src+='<img src=0 onerror=print()>'"></iframe>
+mục tiêu là tạo nhúng iframe vào trang web chính và iframe có src = url của trang web hiện tại thêm dấu # ở cuối, sau khi trong iframe tải xong trang, nó sẽ nối thêm url với thẻ img lỗi để kích hoạt lệnh print() --> hoàn thành mục đích của lab.

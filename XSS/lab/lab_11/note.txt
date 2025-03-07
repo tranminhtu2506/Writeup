@@ -1,0 +1,17 @@
+XSS - Reflected XSS into HTML context with most tags and attributes blocked
+
+End Goal: perform a cross-site scripting attack that bypasses the WAF and calls the print() function.
+
+Analystic
+---------
+Bước 1: Thử tìm kiếm với thẻ <img src='' onerror=''> nhưng hiển thị 1 thẻ tag is not allowed --> tag img không được cho phép --> bị lọc. Tuy nhiên không có nghĩa tất cả các tag đều bị lọc
+Bước 2: thử tìm thẻ <body> --> kết quả là tìm kiếm cho 1 chuỗi rỗng '' --> <body> không bị lọc --> chặn gói tin tìm kiếm, gửi lại gói tin vào intrusder, vào xss cheat sheet copy danh sách các tag, vào phần payloads, chọn simplelist và paste vào --> dò xem có những tag nào được cho phép (là những tag có status code là 200) --> có body và custom-tags. 
+Bước 3: thử với <body onload='alert(1)'> --> kết quả hiển thị 1 thẻ thông báo là thuộc tính không cho phép --> giờ ta cần dò xem những thuộc tính nào được cho phép
+--> có vài thuộc tính được cho phép, chúng ta có thể sử dụng chúng trước khi nhập vào thay đổi onresize và onscrollend.
+Bước 4: 
+Trong ghi chú của lab có ghi: Giải pháp của bạn không được yêu cầu bất kỳ tương tác nào của người dùng. Việc gọi thủ công print()trong trình duyệt của riêng bạn sẽ không giải quyết được bài lab. --> ta cần tự động hóa việc gọi hàm print thay vì cần bất kì thao tác nào --> mà các thuộc tính trên đều cần thao tác của người dùng. Hãy tập trung vào onresize. Quay lại lab, thay vì để onload giờ ta sẽ thay bằng onresize sau đó tìm kiếm để xem phản hồi --> ta có thể thấy khi trang bị thay đổi kích thước thì sẽ hiện ra 1 alert() tuy nhiên việc này vẫn cần sự tương tác của người dùng --> ta có thể hiển thị trang trong iframe vì ta có thể đặt kích thước cho iframe nên trang sẽ bị thay đổi theo kích thước đó --> có thể kích hoạt onresize --> nó sẽ tự động --> nó sẽ hơi khác vì yêu cầu nạn nhân truy cập trang của kẻ tấn công, điểm cộng là tập lệnh chéo trang được thực hiện tự động trên trang. Mặc dù trang hiện sẽ được tải bên trong 1 iframe, lab cung cấp cơ sở để ta tạo iframe với tùy chọn go to exploit server
+Bước 5: 
+Giờ ta truyền vào trong phần body:
+<iframe src="link_trang hiện tại sau khi đã tìm kiếm thẻ body với onresize" onload=this.style.width='100px'>
+việc này nhằm mục đích tải trang hiện tại sau khi ta đã xss vào 1 thẻ iframe, sau khi tải xong sự kiện onload của thẻ sẽ thay đổi kích thước của thẻ về 100px --> thay đổi kích thước trang --> kích hoạt print(). Có thể thấy tại sao ở đây lại có thể sử dụng onload còn trong trang thì không?, vì iframe này được hiển thị trên 1 trang được kiểm soát tấn công về mặt lý thuyết , chúng ta có thể sử dụng thuộc tính onload này --> giải quyết được lab.
+

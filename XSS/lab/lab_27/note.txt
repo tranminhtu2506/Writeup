@@ -1,0 +1,6 @@
+XSS - Reflected XSS protected by very strict CSP, with dangling markup attack
+
+End Goal:  To solve the lab, exploit the vulnerability to perform a CSRF attack and change the email address of someone who views the blog post comments.
+
+Analystic
+---------

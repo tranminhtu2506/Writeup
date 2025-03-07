@@ -1,0 +1,6 @@
+Yêu cầu: Phòng thí nghiệm này phản ánh thông tin đầu vào của người dùng trong thẻ liên kết chuẩn và thoát khỏi dấu ngoặc nhọn. Để giải quyết bài toán này, hãy thực hiện một cuộc tấn công mã lệnh chéo trang trên trang chủ để chèn một thuộc tính gọi hàm alert. Để hỗ trợ cho việc khai thác của bạn, bạn có thể cho rằng người dùng được mô phỏng sẽ nhấn các tổ hợp phím sau:
+ALT+SHIFT+X
+CTRL+ALT+X
+Alt+X
+
+Giải pháp: 

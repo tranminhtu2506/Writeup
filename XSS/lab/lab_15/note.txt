@@ -1,0 +1,19 @@
+XSS - Reflected XSS into attribute with angle brackets HTML-encoded
+
+End Goal: To solve this lab, perform a cross-site scripting attack that injects an attribute and calls the alert function.
+
+Analystic
+---------
+Bước 1: Ta nhập thử từ khóa dạng như <strong>tmt</strong> để xem phản hồi của web. Tuy nhiên ta nhận được phản hồi như sau:
+0 search results for '<strong>tmt</strong>'
+ta thấy ở đây phần tìm kiếm đã được làm sạch và được đưa vào trong 1 thẻ h1 --> ta ko thể chèn bình thường vào được 
+Bước 2: ta thử tìm kiếm lại với từ khóa tmt --> sau đó ta search từ khóa trong DOM, thấy được từ khóa xuất hiện ở 1 thẻ: <input type="text" placeholder="Search the blog..." name="search" value="tmt">
+Ta thấy tmt được đặt trong trường giá trị của thẻ input này, ta sẻ thử nhập vào tmt" để xem có thẻ đóng sớm giá trị này không.
+<input type="text" placeholder="Search the blog..." name="search" value="tmt" "="">
+ta thấy ta đã đóng sớm thành công --> ta có thể lợi dụng lỗ hổng này để XSS.
+Bước 3: Ta cần đặt vào 1 thuộc tính để có thể kích hoạt từ input, thông qua mò thì có 2 thuộc tính đó là onmouseover và onfocus. Vì sao là 2 thuộc tính này? 
+onmouseover được kích hoạt khi bạn di chuột lên trên phần tử, để có thể nhập input vào, user thường sẽ nhập chuột vào ô input sau đó nhập --> sẽ kích hoạt được sự kiện onmouseover
+onfocus được kích hoạt khi ô này được tập trung trong trang web, nói cách khác là khi người dùng muốn nhập dữ liệu vào ô thì ô cần được tập trung --> chắc chắn sẽ kích hoạt được sự kiện này. Ta còn có thể kết hợp nó với autofocus --> mỗi lần tải lại trang ô này sẽ tự động được focus --> ta có 2 cách viết payload như sau:
+
+Cách 1: tmt" onmouseover="alert(1)
+Cách 2: tmt" autofocus onfocus="alert(1)

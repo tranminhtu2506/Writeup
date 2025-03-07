@@ -1,0 +1,17 @@
+XSS - DOM XSS in jQuery anchor href attribute sink using location.search source
+
+End Goal: make the "back" link alert document.cookie.
+
+Analystic
+---------
+Bước 1: truy cập vào phần submit feedback của trang 
+Bước 2: inspect link back của trang 
+Bước 3: ta tìm được 1 đoạn script như sau:
+
+$(function() {
+    $('#backLink').attr("href", (new URLSearchParams(window.location.search)).get('returnPath'));
+});
+
+ta thấy ở đây sử dụng attr để chỉnh sửa thuộc tính href của thẻ a có id backLink, nó lấy tham số từ liên kết của tham số có tên là returnPath. --> ta có thể lợi dụng để thay đổi giá trị của href của thẻ a.
+Ở đây mục đích của ta là hiển thị document.cookie --> ta thay đổi giá trị của truy vấn thành alert(document.cookie) --> khi ấn vào back sẻ hiển thị document.cookie
+                        

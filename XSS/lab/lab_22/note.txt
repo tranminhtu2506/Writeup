@@ -1,0 +1,13 @@
+XSS - Reflected XSS into a template literal with angle brackets, single, double quotes, backslash and backticks Unicode-escaped
+
+End Goal: To solve this lab, perform a cross-site scripting attack that calls the alert function inside the template string.
+
+Analystic
+---------  
+Bước 1: Ta thử nhập 1 từ khóa tìm kiếm như: tmt 
+Bước 2: ta kiểm tra DOM của trang web và tìm kiếm từ khóa ta thấy từ khóa được đặt trong 1 thẻ <h1>, ta không thể xss được 
+Bước 3: Ta tìm thấy 1 đoạn script bên dưới có nội dung như sau:
+var message = `0 search results for 'tmt'`;
+document.getElementById('searchMessage').innerText = message;
+--> cả cụm từ được hiển thị trong h1 được đặt trong 1 cặp dấu ` --> ta có thể sử dụng JavaScript template literals để thực hiện mã JS mà không cần cố kết thúc chuỗi --> ta có payload như sau:
+${alert(document.domain)}
