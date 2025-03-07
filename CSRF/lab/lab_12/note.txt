@@ -1,0 +1,25 @@
+CSRF -  CSRF with broken Referer validation
+
+End Goal:To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Mở trình duyệt Burp và đăng nhập vào tài khoản của bạn. Gửi biểu mẫu "Cập nhật email" và tìm yêu cầu kết quả trong lịch sử Proxy của bạn.
+Gửi yêu cầu đến Burp Repeater. Lưu ý rằng nếu bạn thay đổi tên miền trong tiêu đề HTTP Referer, yêu cầu sẽ bị từ chối.
+Sao chép tên miền gốc của phiên bản lab của bạn và thêm nó vào tiêu đề Referer dưới dạng chuỗi truy vấn. Kết quả sẽ trông giống như thế này:
+
+Referer: https://arbitrary-incorrect-domain.net?YOUR-LAB-ID.web-security-academy.net
+Gửi yêu cầu và quan sát rằng yêu cầu hiện đã được chấp nhận. Trang web dường như chấp nhận bất kỳ tiêu đề Referer nào miễn là nó chứa tên miền mong đợi ở đâu đó trong chuỗi.
+Tạo một khai thác bằng chứng khái niệm CSRF như mô tả trong giải pháp cho lỗ hổng CSRF không có phòng thủ và lưu trữ nó trên máy chủ khai thác. Chỉnh sửa JavaScript để đối số thứ ba của history.pushState()hàm bao gồm một chuỗi truy vấn với URL phiên bản phòng thí nghiệm của bạn như sau:
+
+history.pushState("", "", "/?YOUR-LAB-ID.web-security-academy.net")
+Điều này sẽ khiến tiêu đề Referer trong yêu cầu được tạo chứa URL của trang web mục tiêu trong chuỗi truy vấn, giống như chúng tôi đã thử nghiệm trước đó.
+
+Nếu bạn lưu trữ khai thác và kiểm tra bằng cách nhấp vào "Xem khai thác", bạn có thể gặp lại lỗi "tiêu đề Referer không hợp lệ". Điều này là do nhiều trình duyệt hiện xóa chuỗi truy vấn khỏi tiêu đề Referer theo mặc định như một biện pháp bảo mật. Để ghi đè hành vi này và đảm bảo rằng URL đầy đủ được bao gồm trong yêu cầu, hãy quay lại máy chủ khai thác và thêm tiêu đề sau vào phần "Head":
+
+Referrer-Policy: unsafe-url
+Lưu ý rằng không giống như tiêu đề Referer thông thường, từ "referrer" phải được viết đúng chính tả trong trường hợp này.
+
+Thay đổi địa chỉ email trong phần khai thác sao cho nó không trùng với địa chỉ email của bạn.
+Lưu trữ lỗ hổng, sau đó nhấp vào "Gửi cho nạn nhân" để giải quyết phòng thí nghiệm.

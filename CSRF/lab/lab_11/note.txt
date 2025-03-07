@@ -1,0 +1,15 @@
+CSRF - CSRF where Referer validation depends on header being present
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Mở trình duyệt Burp và đăng nhập vào tài khoản của bạn. Gửi biểu mẫu "Cập nhật email" và tìm yêu cầu kết quả trong lịch sử Proxy của bạn.
+Gửi yêu cầu đến Burp Repeater và quan sát xem nếu bạn thay đổi tên miền trong tiêu đề HTTP Referer thì yêu cầu sẽ bị từ chối.
+Xóa hoàn toàn tiêu đề Referer và quan sát xem yêu cầu hiện đã được chấp nhận.
+Tạo và lưu trữ một bằng chứng khai thác khái niệm như được mô tả trong giải pháp cho lỗ hổng CSRF không có phòng thủ. Bao gồm HTML sau để ẩn tiêu đề Referer:
+
+<meta name="referrer" content="no-referrer">
+Thay đổi địa chỉ email trong phần khai thác sao cho nó không trùng với địa chỉ email của bạn.
+Lưu trữ lỗ hổng, sau đó nhấp vào "Gửi cho nạn nhân" để giải quyết phòng thí nghiệm.

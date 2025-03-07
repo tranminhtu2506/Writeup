@@ -1,0 +1,34 @@
+CSRF - CSRF where token is tied to non-session cookie
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You have two accounts on the application that you can use to help design your attack. The credentials are as follows:
+wiener:peter
+carlos:montoya
+
+Analystic
+---------
+Bước 1: Mở trình duyệt Burp, đăng nhập vào tài khoản wiener và thực hiện update Email. Vào history, kiểm tra request khi update email, ta có request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0a8900e0049be5568139d936004100a2.web-security-academy.net
+Cookie: csrfKey=rsM3nCoDx9DBNK4NBRvzpDpXJKWimwrP; session=lG1GZdq0s0JBpSYhTOZEc5yFe3CzH5Tw
+....
+email=qwe%40gmail.com&csrf=vGCcQSTkUsgQl20ZMryOAU3PnimfuZnc
+Khác với lab trước, ở đây ta có 1 csrfKey, được tạo mỗi khi người dùng đăng nhập để liên kết với giá trị csrf --> nếu chỉ đơn giản lấy giá trị csrf như bài trước sẽ không hoạt động được
+Bước 2: Gửi request tới repeater, khi ta thực hiện xóa session, ta sẽ bị đưa ra trang login, tuy nhiên khi ta xóa csrfKey, ta nhận được thông báo invalid csrf token --> sessionId và csrfKey không được liên kết với nhau để xử lý
+Bước 3:
+Ta thử thay đổi giá trị của csrf --> invalid csrf token --> csrf được liên kết với csrfKey.
+Nếu ta đăng nhập vào 1 tài khoản khác, thực hiện update email sau đó lấy thay csrfKey và csrf vào, ta thấy vẫn update được email của tài khoản hiện tại --> chỉ cần chèn được csrfKey và csrf vào request của người dùng ta có thể thay đổi email
+Bước 4: 
+Vậy câu hỏi đặt ra là làm thế nào để chèn được csrfKey vào?. Ta thực hiện chức năng tìm kiếm của lab, ta thấy phản hồi chứa từ khóa tìm kiếm, nhưng không hề sử dụng csrf hay csrfKey để bảo mật --> ta có thể sử dụng chức năng này để chèn csrfKey vào tiêu đề của request, sau đó tiếp tục chèn giá trị csrf. Vì form được ta viết trong request nên ta không cần thao tác nào để thực hiện gửi hay chứa thông tin, nhưng ta cần 1 thao tác tự động để cập nhật csrfKey. vì vậy ta sẽ đặt 1 thẻ img trong request, thẻ này có src =  url của lab hiện tại với set cookie đã được chèn thêm vào khi thẻ này load sẽ bị lỗi vì không có ảnh như vậy nhưng trang sẽ tự động thực hiện load ảnh --> đặt onerror cho nó để khi lỗi nó sẽ gửi form mà ta đặt trong request --> từ đó hoàn thành được bài lab này. 
+Bước 5: Vào exploit server và mô phỏng request với nội dung của body như sau:
+<html>
+<body>
+<form action="url lab/change-email" method="POST">
+<input type="hidden" name="email" value="my-email@gmail.com">
+<input type="hidden" name="csrf" value="giá trị csrf của wiener">
+</form>
+<img src="url-lab/?search=test%0d%0a(dấu xuống dòng)Set-cookie: csrfKey=giá trị csrfKey;SameSite:None" onerror="document.forms[0].submit()">
+</body>
+</html>
+
+Vì lab này có lỗ hổng ở phần search vì nó không sử dụng csrfKey, nếu nó có thì sẽ không đặt được. 

